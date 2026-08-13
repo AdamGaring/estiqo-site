@@ -1,0 +1,1359 @@
+/* ============================================================
+   Estiqo — landing page
+   ------------------------------------------------------------
+   Extracted from the old single-file index.html so the browser
+   can cache it, and so the markup is readable without scrolling
+   past 900 lines of <style>.
+
+   Colours are the app's real values, not approximations:
+   --green matches Assets.xcassets/AccentColor.colorset exactly
+   (light 0.122/0.616/0.388, dark 0.145/0.506/0.325), and
+   --terracotta / --negative match Theme.swift's own definitions.
+   The site used to run a warmer, older palette that predated
+   them, which meant the page and the product it was selling
+   were visibly different shades of green.
+   ============================================================ */
+
+/* ---------- 1. Tokens ---------- */
+
+:root {
+  /* Surfaces — iOS systemGroupedBackground / secondarySystemGroupedBackground */
+  --bg: #F2F2F7;
+  --surface: #FFFFFF;
+  --surface-sunken: #E9E9EF;
+
+  /* Ink */
+  --ink: #1C1C1E;
+  --muted: #6C6C70;          /* 4.7:1 on --bg — passes AA for body text */
+  --line: rgba(60, 60, 67, 0.13);
+
+  /* Brand */
+  --green: #1F9D63;          /* fills, large display type */
+  --green-ink: #227E4F;      /* 5.0:1 on white — the only green safe for small text */
+  --terracotta: #CC8C54;     /* fields and accents only; never small text */
+  --negative: #B23B40;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Geometry */
+  --radius: 22px;
+  --radius-sm: 14px;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px -20px rgba(0, 0, 0, 0.22);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.05), 0 28px 60px -28px rgba(0, 0, 0, 0.3);
+  --maxw: 1120px;
+
+  /* Liquid field opacity — dialled down on mobile further below */
+  --liquid-strength: 1;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --surface: #1C1C1E;
+    --surface-sunken: #131315;
+
+    --ink: #F5F5F7;
+    --muted: #98989E;
+    --line: rgba(235, 235, 245, 0.16);
+
+    --green: #258153;
+    --green-ink: #1F9D63;    /* 6.1:1 on black */
+    --terracotta: #D99E6B;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px -20px rgba(0, 0, 0, 0.8);
+    --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 28px 60px -28px rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* ---------- 2. Base ---------- */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* Sticky header clearance for in-page anchors. */
+  scroll-padding-top: 84px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+img, svg, video { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Sections own their liquid field, so each one clips its own blobs. */
+section { position: relative; overflow: hidden; }
+
+/* ---------- 3. Type scale ---------- */
+
+h1, h2, h3 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  /* SF Pro Display is the optical size Apple uses above ~20px. */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+h1 { font-size: clamp(40px, 6.4vw, 68px); }
+h2 { font-size: clamp(30px, 4.4vw, 46px); letter-spacing: -0.028em; }
+h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
+
+.lede {
+  font-size: clamp(17px, 1.5vw, 20px);
+  line-height: 1.5;
+  color: var(--muted);
+  /* Comfortable measure — roughly 46 characters, not the full column. */
+  max-width: 30em;
+  margin: 0;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--green-ink);
+  margin: 0 0 18px;
+}
+.eyebrow::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+/* Financial figures throughout use tabular numerals in SF rather than a
+   monospaced typeface — it's what the app itself renders, and a true mono
+   face would read as "code" rather than "money". See .stat dd, .price-amount
+   and .pr-val. */
+
+.section-head {
+  max-width: 640px;
+  margin: 0 0 56px;
+}
+.section-head.centred {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+.section-head.centred .lede { margin-left: auto; margin-right: auto; }
+.section-head h2 + .lede { margin-top: 18px; }
+
+/* ============================================================
+   4. LIQUID MOTION
+   ------------------------------------------------------------
+   A translation of the app's own AuraBackground into CSS, rather
+   than decoration invented for the web.
+
+   Performance contract, in order of importance:
+   - Only `transform` and `opacity` are ever animated. `filter:
+     blur()` is set once as a static property, so the blur is
+     rasterised a single time and every frame after that is a
+     compositor transform of an existing texture.
+   - The asymmetric border-radius is what makes a rotating blob
+     read as *morphing*. Animating border-radius itself would
+     re-rasterise a 70px-blurred layer every frame; rotating a
+     lopsided shape costs nothing and looks the same.
+   - JS adds `.is-live` only while a field is on screen (see
+     estiqo.js). Off-screen fields are `paused`, so a page with
+     six liquid sections still only ever animates the one or two
+     you can actually see.
+   ============================================================ */
+
+.liquid {
+  position: absolute;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  /* Scroll parallax target — written by JS as a plain number of px.
+     Deliberately untransitioned: scroll response must feel locked to
+     the scroll, not lag behind it. */
+  transform: translate3d(0, calc(var(--sy, 0) * 1px), 0);
+  contain: paint;
+  /* Every section clips its own field, which left a visible horizontal
+     seam wherever a blob was still at partial opacity when it hit the
+     section edge — most obvious in dark mode, where the tint simply
+     stopped mid-glow. Fading the field out at the top and bottom means
+     each section's liquid dissolves into the next instead of ending. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+}
+
+/* Pointer response lives on a second layer so it can carry a long,
+   soft transition without that easing also being applied to scroll. */
+.liquid-inner {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(calc(var(--lx, 0) * 1px), calc(var(--ly, 0) * 1px), 0);
+  transition: transform 1.1s var(--ease-soft);
+}
+
+.blob {
+  position: absolute;
+  border-radius: 47% 53% 61% 39% / 43% 47% 53% 57%;
+  opacity: calc(var(--blob-o, 0.5) * var(--liquid-strength));
+  filter: blur(64px);
+  animation: liquid-drift var(--dur, 52s) var(--ease-soft) infinite alternate;
+  animation-play-state: paused;
+  transform: translate3d(0, 0, 0);
+}
+.is-live .blob { animation-play-state: running; }
+
+.blob.green { background: radial-gradient(circle at 36% 34%, var(--green), transparent 68%); }
+.blob.terra { background: radial-gradient(circle at 40% 38%, var(--terracotta), transparent 68%); }
+
+/* One keyframe, one transform property. Variation between blobs comes
+   from duration and delay, not from more keyframes — which is why the
+   overall field never visibly loops. */
+@keyframes liquid-drift {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(3%, -5%, 0) rotate(140deg) scale(1.14); }
+  100% { transform: translate3d(-4%, 4%, 0) rotate(280deg) scale(0.94); }
+}
+
+/* ---------- 5. Scroll reveals ---------- */
+
+/* Gated on `.js` (set by an inline script in <head>) so that with
+   JavaScript disabled or broken, every element renders plainly
+   visible instead of staying at opacity 0 forever. */
+.js .reveal {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition:
+    opacity 0.75s var(--ease),
+    transform 0.75s var(--ease);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.js .reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- 6. Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  /* 52px tall — comfortably past the 44pt iOS touch minimum. */
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
+}
+.btn:active { transform: scale(0.985); }
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: var(--shadow-card);
+}
+@media (prefers-color-scheme: dark) {
+  .btn-primary { background: #F5F5F7; color: #000; }
+}
+
+/* The restrained "light moving across the CTA" the brand calls for:
+   a single translucent band swept once on hover with a transform.
+   No infinite pulse — the old page had a 2.8s glow looping forever,
+   which reads as urgency, not quality. */
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  top: -60%; bottom: -60%;
+  left: -40%;
+  width: 34%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: translate3d(-260%, 0, 0) skewX(-14deg);
+  transition: transform 0.9s var(--ease-soft);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+  .btn-primary:hover::after { transform: translate3d(560%, 0, 0) skewX(-14deg); }
+}
+
+/* Pre-launch state for the final CTA: the badge is a status, not a
+   control. It keeps the button's shape so the section still reads as the
+   page's closing call, but drops every affordance that promises something
+   will happen — no sheen, no lift, no pointer. */
+.btn.is-status { cursor: default; }
+.btn.is-status::after { display: none; }
+.btn.is-status:active { transform: none; }
+@media (hover: hover) {
+  .btn.is-status:hover { transform: none; box-shadow: var(--shadow-card); }
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+@media (hover: hover) {
+  .btn-secondary:hover { border-color: var(--ink); }
+}
+
+.btn .apple-glyph { width: 19px; height: 19px; fill: currentColor; flex-shrink: 0; }
+
+/* Two-line App Store lockup, sized so "App Store" is the dominant word. */
+.btn-store { padding-left: 22px; padding-right: 24px; }
+.btn-store .store-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.08;
+}
+.btn-store .store-copy small { font-size: 10.5px; font-weight: 500; opacity: 0.72; letter-spacing: 0.01em; }
+.btn-store .store-copy strong { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+
+.cta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 34px 0 20px;
+}
+.cta-fine {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+.cta-fine strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- 7. Header ---------- */
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s var(--ease);
+}
+.nav.scrolled { border-bottom-color: var(--line); }
+
+.nav-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 11px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  flex-shrink: 0;
+}
+.brand img { width: 30px; height: 30px; border-radius: 22.5%; }
+
+.nav-links {
+  display: flex;
+  gap: 28px;
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.nav-links a { transition: color 0.2s var(--ease); }
+@media (hover: hover) {
+  .nav-links a:hover { color: var(--ink); }
+}
+
+.nav .btn { margin-left: 28px; min-height: 40px; padding: 0 16px; font-size: 14px; }
+.nav .btn-store .store-copy small { font-size: 9px; }
+.nav .btn-store .store-copy strong { font-size: 14px; }
+
+.nav-toggle {
+  display: none;
+  margin-left: auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px; height: 44px;   /* iOS minimum touch target */
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+}
+.nav-toggle svg { width: 18px; height: 18px; }
+.nav-toggle .icon-close { display: none; }
+.nav-toggle[aria-expanded="true"] .icon-open { display: none; }
+.nav-toggle[aria-expanded="true"] .icon-close { display: block; }
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  padding: 4px 24px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  padding: 14px 2px;
+  font-size: 16px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--line);
+}
+.mobile-menu a:last-of-type { border-bottom: none; }
+.mobile-menu .btn { margin-top: 14px; }
+
+/* ---------- 8. Hero ---------- */
+
+.hero { padding: 72px 0 40px; }
+
+.hero-grid {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 0.82fr);
+  gap: 56px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.hero h1 { margin-bottom: 22px; }
+/* The one place the brand green carries display type. Large enough
+   that #1F9D63's 3.5:1 is comfortably inside AA for large text. */
+.hero h1 .accent { color: var(--green-ink); }
+
+/* Hero liquid runs richer than any other section — motion hierarchy
+   is Hero HIGH, sections MEDIUM, everything else LOW. */
+.hero .blob { filter: blur(72px); }
+/* Top of the page has nothing above it to blend into, so the hero fades
+   at the bottom only and keeps its full presence behind the headline. */
+.hero .liquid {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 80%, transparent);
+}
+.hero .blob-1 { width: 46vw; height: 46vw; max-width: 620px; max-height: 620px; top: -18%; left: -12%; --dur: 44s; --blob-o: 0.42; }
+.hero .blob-2 { width: 38vw; height: 38vw; max-width: 520px; max-height: 520px; top: 22%; right: -8%; --dur: 61s; --blob-o: 0.3; animation-delay: -18s; }
+.hero .blob-3 { width: 28vw; height: 28vw; max-width: 380px; max-height: 380px; bottom: -14%; left: 34%; --dur: 53s; --blob-o: 0.26; animation-delay: -34s; }
+
+/* ---------- 9. Device ---------- */
+
+.device-wrap {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.device {
+  position: relative;
+  width: 300px;
+  aspect-ratio: 1206 / 2622;
+  background: #1C1C1E;
+  border-radius: 48px;
+  padding: 5px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+    0 40px 80px -30px rgba(0, 0, 0, 0.42),
+    0 10px 26px -14px rgba(0, 0, 0, 0.24);
+  /* Extremely subtle depth — the device sits fractionally in front of
+     the liquid field rather than pasted flat onto it. */
+  transform: translate3d(calc(var(--dx, 0) * 1px), calc(var(--dy, 0) * 1px), 0);
+  transition: transform 1.3s var(--ease-soft);
+}
+.device-screen {
+  border-radius: 43px;
+  overflow: hidden;
+  position: relative;
+  background: var(--surface);
+}
+.device-screen img { width: 100%; height: auto; }
+/* Glass sheen so the capture doesn't read as a flat rectangle. */
+.device-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(122deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 42%);
+  pointer-events: none;
+}
+
+.device.sm { width: 262px; }
+
+/* Bottom-cropped device. The mask does the cropping rather than a hard
+   overflow edge, so the phone dissolves out of frame instead of looking
+   like a screenshot someone trimmed. */
+.device-bleed {
+  height: 460px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 74%, transparent);
+  mask-image: linear-gradient(to bottom, #000 74%, transparent);
+}
+.device-bleed .device { width: 300px; }
+
+/* Detail crop — a piece of a screen at its own scale, framed as an
+   artefact rather than dressed up as a device. */
+.detail-shot {
+  margin: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 28px 60px -30px rgba(0, 0, 0, 0.38);
+}
+.detail-shot img { width: 100%; height: auto; }
+.detail-caption {
+  margin: 16px 2px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---------- 10. Trust strip ---------- */
+
+.trust {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.trust-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 22px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 34px;
+}
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.trust-item svg { width: 17px; height: 17px; color: var(--green-ink); flex-shrink: 0; }
+
+/* ---------- 11. Generic section rhythm ---------- */
+
+.band { padding: 108px 0; }
+.band.tight { padding: 84px 0; }
+.band .blob-1 { width: 44vw; height: 44vw; max-width: 560px; max-height: 560px; top: -20%; right: -10%; --dur: 58s; --blob-o: 0.26; }
+.band .blob-2 { width: 32vw; height: 32vw; max-width: 420px; max-height: 420px; bottom: -18%; left: -8%; --dur: 71s; --blob-o: 0.2; animation-delay: -26s; }
+
+/* ---------- 12. Problem → one place ---------- */
+
+.scatter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 460px;
+}
+
+/* The chips are laid out in their FINAL positions by the grid. The
+   "scattered" state is purely a starting transform, so nothing about
+   this animation touches layout — it is six composited transforms
+   settling into place, and the grid never reflows. */
+.scatter-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.scatter-chip svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+
+.js .scatter-chip {
+  opacity: 0;
+  transform: translate3d(var(--dx, 0), var(--dy, 0), 0) rotate(var(--rot, 0deg)) scale(var(--sc, 0.92));
+  transition:
+    opacity 0.6s var(--ease),
+    transform 1.05s var(--ease);
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+.js .scatter-chip.in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+}
+
+.arrow-down {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+  color: var(--green);
+}
+.arrow-down svg { width: 26px; height: 26px; }
+
+.resolve-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 22px;
+  max-width: 460px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+}
+.resolve-card img { width: 46px; height: 46px; border-radius: 22.5%; flex-shrink: 0; }
+.resolve-card h3 { margin-bottom: 3px; }
+.resolve-card p { margin: 0; font-size: 14px; color: var(--muted); }
+
+/* ---------- 13. Split feature rows ---------- */
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: center;
+}
+.split.reverse .split-visual { order: -1; }
+
+.split-copy h2 { margin-bottom: 20px; }
+.split-copy .lede { margin-bottom: 30px; }
+
+/* ---------- 14. Stat tiles ---------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 460px;
+}
+.stat {
+  padding: 16px 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+}
+.stat dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.stat dd {
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 25px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+.stat dd.pos { color: var(--green-ink); }
+.stat dd small { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+
+/* Stacked variant used where the figures are the section's whole visual
+   rather than a footnote under copy. */
+.stats.big {
+  grid-template-columns: 1fr;
+  gap: 14px;
+  max-width: 420px;
+}
+.stats.big .stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 26px;
+}
+.stats.big .stat dt { margin-bottom: 0; }
+.stats.big .stat dd { font-size: clamp(26px, 3vw, 33px); }
+
+/* ---------- 15. Tick lists ---------- */
+
+.ticks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.ticks li {
+  position: relative;
+  padding-left: 30px;
+  font-size: 15.5px;
+  line-height: 1.45;
+}
+.ticks li strong { font-weight: 600; }
+.ticks li span { color: var(--muted); }
+.ticks li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 4px;
+  width: 15px; height: 8px;
+  border-left: 2px solid var(--green);
+  border-bottom: 2px solid var(--green);
+  transform: rotate(-45deg);
+}
+
+/* ---------- 16. Getting started ---------- */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.step-shot {
+  aspect-ratio: 900 / 671;
+  margin-bottom: 20px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 16px 34px -22px rgba(0, 0, 0, 0.4);
+}
+.step-shot img { width: 100%; height: 100%; object-fit: cover; }
+.step-n {
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green-ink);
+}
+.step h3 { margin-bottom: 8px; }
+.step p:last-child { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+
+/* ---------- 17. EOFY ---------- */
+
+.eofy-pack {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+}
+.pack-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 14.5px;
+}
+.pack-row .pr-icon {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green-ink);
+  flex-shrink: 0;
+}
+.pack-row .pr-icon svg { width: 14px; height: 14px; }
+.pack-row .pr-val {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.pack-row .pr-val.pos { color: var(--green-ink); }
+.pack-row .pr-val.neg { color: var(--negative); }
+.pack-row .pr-val.muted { color: var(--muted); font-weight: 500; }
+
+.pack-formats {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.fmt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* ---------- 18. Privacy ---------- */
+
+/* The one dark chapter on the page. It marks privacy as a product
+   principle rather than a feature bullet, and gives the scroll a
+   change of register right before pricing. */
+.privacy {
+  background: #000;
+  color: #F5F5F7;
+  --ink: #F5F5F7;
+  --muted: #98989E;
+  --line: rgba(235, 235, 245, 0.16);
+  --surface: #1C1C1E;
+  --green-ink: #1F9D63;
+}
+/* In dark mode the page is already #000, so a black privacy section stops
+   reading as a separate chapter and just merges into the scroll. Lifting
+   it one step restores the change of register that makes this section feel
+   like a statement rather than another band. */
+@media (prefers-color-scheme: dark) {
+  .privacy { background: #0E0E10; }
+  .privacy .privacy-fact { background: rgba(28, 28, 30, 0.85); }
+  .privacy .privacy-phone {
+    background:
+      radial-gradient(circle at 50% 26%, color-mix(in srgb, var(--green) 42%, transparent), transparent 70%),
+      #050505;
+  }
+}
+
+.privacy .blob-1 { width: 52vw; height: 52vw; max-width: 700px; max-height: 700px; top: -22%; left: 50%; margin-left: -26vw; --dur: 66s; --blob-o: 0.34; }
+.privacy .blob-2 { width: 34vw; height: 34vw; max-width: 460px; max-height: 460px; bottom: -20%; right: -6%; --dur: 78s; --blob-o: 0.16; animation-delay: -30s; }
+
+.privacy-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+.privacy .lede { margin-left: auto; margin-right: auto; margin-top: 20px; }
+
+/* Device → your data. No cloud, no server, no network lines: the
+   whole point is that there is nothing on the other end of an arrow. */
+.privacy-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin: 52px 0 46px;
+}
+.privacy-phone {
+  width: 208px;
+  padding: 26px 16px 20px;
+  border-radius: 30px;
+  border: 2px solid rgba(235, 235, 245, 0.28);
+  background:
+    radial-gradient(circle at 50% 26%, color-mix(in srgb, var(--green) 42%, transparent), transparent 70%),
+    #0A0A0A;
+  position: relative;
+}
+.pp-notch {
+  position: absolute;
+  top: 10px; left: 50%;
+  transform: translateX(-50%);
+  width: 42px; height: 7px;
+  border-radius: 99px;
+  background: rgba(235, 235, 245, 0.22);
+}
+.pp-faceid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(235, 235, 245, 0.62);
+}
+.pp-faceid svg { width: 14px; height: 14px; }
+
+.pp-rows { margin: 0; display: grid; gap: 7px; }
+.pp-rows > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(235, 235, 245, 0.07);
+}
+.pp-rows dt { font-size: 10.5px; color: rgba(235, 235, 245, 0.55); }
+.pp-rows dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: #F5F5F7;
+}
+/* --green-ink is #1F9D63 inside .privacy — 5.7:1 on the phone's near-black
+   interior. Brightening it to something more "screen-like" would mean
+   inventing a green the brand doesn't have. */
+.pp-rows dd.pos { color: var(--green-ink); }
+.privacy-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.privacy-facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+  text-align: left;
+}
+.privacy-fact {
+  padding: 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(28, 28, 30, 0.55);
+}
+.privacy-fact strong { display: block; font-size: 14.5px; font-weight: 600; margin-bottom: 4px; }
+.privacy-fact span { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+.privacy-verify { margin: 34px 0 0; text-align: center; }
+.privacy-verify a {
+  display: inline-block;
+  padding: 10px 4px;          /* keeps the tap target past 24px on phones */
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--green-ink);
+  border-bottom: 1px solid color-mix(in srgb, var(--green-ink) 45%, transparent);
+}
+@media (hover: hover) {
+  .privacy-verify a:hover { border-bottom-color: var(--green-ink); }
+}
+
+/* ---------- 19. Australian ---------- */
+
+.au-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 620px;
+}
+.au-chip {
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+}
+
+/* ---------- 20. Pricing ---------- */
+
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 400px));
+  justify-content: center;
+  gap: 20px;
+  align-items: stretch;
+}
+.price-card {
+  display: flex;
+  flex-direction: column;
+  padding: 34px 30px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+.price-card.featured {
+  border: 1.5px solid var(--green);
+  box-shadow: var(--shadow-lift);
+}
+.price-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.price-card.featured .price-name { color: var(--green-ink); }
+.price-amount {
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.price-amount span { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: -0.01em; }
+.price-sub { margin: 12px 0 0; font-size: 14.5px; color: var(--muted); }
+
+.price-alt {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-size: 14px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.price-alt strong { font-variant-numeric: tabular-nums; font-weight: 600; }
+.price-alt span { color: var(--muted); }
+
+.price-list {
+  list-style: none;
+  margin: 26px 0 28px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  flex: 1;
+}
+.price-list li {
+  position: relative;
+  padding-left: 27px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.price-list li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 4px;
+  width: 14px; height: 7px;
+  border-left: 2px solid var(--green);
+  border-bottom: 2px solid var(--green);
+  transform: rotate(-45deg);
+}
+.price-card .btn { width: 100%; }
+.pricing-fine {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 32px auto 0;
+  max-width: 620px;
+  line-height: 1.55;
+}
+
+/* ---------- 21. FAQ ---------- */
+
+.faq-list {
+  max-width: 760px;
+  margin: 0 auto;
+  border-top: 1px solid var(--line);
+}
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-q {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px 4px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  cursor: pointer;
+}
+.faq-q .chev {
+  width: 15px; height: 15px;
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform 0.3s var(--ease);
+}
+.faq-item.open .faq-q .chev { transform: rotate(180deg); }
+.faq-a {
+  overflow: hidden;
+  height: 0;
+  transition: height 0.32s var(--ease);
+}
+.faq-a p {
+  margin: 0 4px 24px;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+/* ---------- 22. Final CTA ---------- */
+
+.final {
+  padding: 130px 0 140px;
+  text-align: center;
+}
+/* The most polished field on the page, and still only three blobs. */
+.final .blob { filter: blur(80px); }
+.final .blob-1 { width: 54vw; height: 54vw; max-width: 720px; max-height: 720px; top: -26%; left: 50%; margin-left: -27vw; --dur: 50s; --blob-o: 0.3; }
+.final .blob-2 { width: 34vw; height: 34vw; max-width: 460px; max-height: 460px; bottom: -16%; left: -6%; --dur: 64s; --blob-o: 0.2; animation-delay: -22s; }
+.final .blob-3 { width: 30vw; height: 30vw; max-width: 400px; max-height: 400px; bottom: -12%; right: -6%; --dur: 74s; --blob-o: 0.16; animation-delay: -40s; }
+
+.final img.mark { width: 62px; height: 62px; border-radius: 22.5%; margin: 0 auto 26px; box-shadow: var(--shadow-lift); }
+.final h2 { max-width: 15ch; margin: 0 auto 20px; }
+.final .lede { margin: 0 auto; }
+.final .cta-row { justify-content: center; }
+.final .cta-fine { text-align: center; }
+
+/* ---------- 23. Footer ---------- */
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 46px 0 40px;
+}
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 26px;
+  font-size: 14px;
+  color: var(--muted);
+}
+@media (hover: hover) {
+  .footer-links a:hover { color: var(--ink); }
+}
+.footer-legal {
+  margin: 30px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 620px;
+}
+.footer-bottom { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+
+/* ---------- 24. Video ---------- */
+
+.video-frame {
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-lift);
+  /* Reserves the box before the file arrives, so nothing below jumps. */
+  aspect-ratio: 16 / 9;
+  background: var(--surface-sunken);
+  z-index: 1;
+}
+.video-frame video { width: 100%; height: 100%; object-fit: cover; }
+.video-caption {
+  text-align: center;
+  margin: 20px auto 0;
+  font-size: 14.5px;
+  color: var(--muted);
+  max-width: 620px;
+}
+
+/* ============================================================
+   25. RESPONSIVE
+   ------------------------------------------------------------
+   Designed at each width rather than shrunk from the desktop
+   layout: the hero recomposes, the device shrinks and moves
+   above the fold's fine print, and the liquid field is dialled
+   back because a phone GPU is also driving a 3x display.
+   ============================================================ */
+
+@media (max-width: 1000px) {
+  .split { gap: 44px; }
+  .privacy-facts { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 860px) {
+  .nav-links { display: none; }
+  .nav > .nav-inner > .btn { display: none; }
+  .nav-toggle { display: flex; }
+
+  .hero { padding: 40px 0 24px; }
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    text-align: center;
+  }
+  .hero .lede { margin-left: auto; margin-right: auto; }
+  .hero .eyebrow { justify-content: center; }
+  .cta-row { justify-content: center; margin-top: 28px; }
+  /* Device moves up directly under the CTA so the product is on the
+     first screen. It used to sit 650px down, below a six-line centred
+     paragraph — a phone visitor's entire first impression was type. */
+  .device { width: 250px; }
+
+  .band { padding: 64px 0; }
+  .band.tight { padding: 52px 0; }
+
+  .split { grid-template-columns: 1fr; gap: 40px; }
+  .split.reverse .split-visual { order: 0; }
+  .split-copy .lede { margin-bottom: 26px; }
+  .scatter-grid, .stats, .eofy-pack, .au-chips, .resolve-card { max-width: none; }
+
+  .price-grid { grid-template-columns: minmax(0, 460px); }
+
+  /* Steps turn side-on rather than stacking. Stacked, three captions each
+     under a full-width crop ran to about a screen and a half for what is
+     a reassurance section, not a proof one — the film and the three device
+     shots carry the proof. Side-on keeps all three readable together,
+     which is the whole point of a numbered sequence. */
+  .steps { grid-template-columns: 1fr; gap: 22px; }
+  .step {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    grid-template-rows: auto auto auto;
+    column-gap: 16px;
+    align-items: start;
+  }
+  /* Explicit placement, not auto-flow. The step has four children, so
+     auto-placement fills row by row and drops the heading into column one
+     underneath the image, with the description stranded beside it. */
+  .step-shot {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    margin-bottom: 0;
+  }
+  .step-n { grid-column: 2; grid-row: 1; margin-top: 2px; }
+  .step h3 { grid-column: 2; grid-row: 2; }
+  .step p:last-child { grid-column: 2; grid-row: 3; }
+
+  .final { padding: 96px 0 100px; }
+}
+
+@media (max-width: 560px) {
+  :root {
+    /* Softer fields on phones: less overdraw for the GPU, and less
+       competition with type at close viewing distance. */
+    --liquid-strength: 0.72;
+    --radius: 18px;
+  }
+  body { font-size: 16px; }
+
+  .container { padding: 0 20px; }
+  .nav-inner { padding: 10px 20px; }
+
+  .hero h1 { letter-spacing: -0.035em; }
+  .device { width: 228px; }
+  .cta-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .cta-row .btn { width: 100%; }
+  .cta-fine { text-align: center; }
+
+  .trust-inner { gap: 12px 22px; padding: 18px 20px; }
+  .trust-item { font-size: 13px; }
+
+  .scatter-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Damp the scattered start offsets on phones. At full strength a chip in
+     the right-hand column begins ~48px past the viewport edge and spends
+     the first half of its travel clipped, which reads as a glitch rather
+     than as things coming together. The inline custom properties in the
+     markup are overridden here rather than removed, so desktop keeps the
+     wider, more deliberate scatter. */
+  .scatter-chip { --dx: 0px !important; --dy: 18px !important; --rot: -3deg !important; }
+  .scatter-chip:nth-child(even) { --dx: 12px !important; --rot: 3deg !important; }
+  .stats { grid-template-columns: 1fr; }
+  .stat { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+  .stat dt { margin-bottom: 0; }
+
+  .privacy-facts { grid-template-columns: 1fr; }
+  .privacy-diagram { margin: 40px 0 36px; }
+
+  .step { grid-template-columns: 116px 1fr; gap: 14px; }
+  .step h3 { font-size: 17px; }
+  .step p:last-child { font-size: 14px; }
+
+  .price-card { padding: 28px 22px; }
+  .price-amount { font-size: 36px; }
+
+  .faq-q { font-size: 16px; padding: 20px 2px; }
+  .video-frame { border-radius: 16px; }
+  .final { padding: 76px 0 84px; }
+
+  /* Footer links sat at 21px tall — under even the 24px WCAG 2.5.8
+     minimum, let alone Apple's 44px. Stacked full-width rows with real
+     padding on phones; unchanged on desktop, where they're a pointer
+     target and the inline row reads better. */
+  .footer-top { gap: 20px; }
+  .footer-links {
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+  }
+  .footer-links a {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .footer-links a:last-child { border-bottom: none; }
+  .brand { padding: 6px 0; }
+}
+
+/* ============================================================
+   26. REDUCED MOTION
+   ------------------------------------------------------------
+   Decorative motion is removed outright, not slowed. Everything
+   that motion was revealing is shown in its final state, so the
+   page loses its animation and keeps all of its content.
+   estiqo.js reads the same query and skips the pointer/scroll
+   listeners entirely, so nothing is being computed either.
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  .blob { animation: none !important; }
+  .liquid, .liquid-inner, .device { transition: none !important; transform: none !important; }
+
+  .js .reveal,
+  .js .scatter-chip {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .btn-primary::after { display: none; }
+  .faq-a { transition: none; }
+  .faq-q .chev { transition: none; }
+}
