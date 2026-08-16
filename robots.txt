@@ -1,0 +1,37 @@
+# estiqo.com.au
+
+User-agent: *
+Allow: /
+
+# The double opt-in landing page. Carries <meta name="robots" content="noindex">
+# as well — this is belt and braces, since a confirmation page in a search
+# result is a dead end for whoever clicks it.
+Disallow: /confirmed.html
+
+# ---------------------------------------------------------------------------
+# AI crawlers — explicitly allowed.
+#
+# `User-agent: *` above already permits these; naming them is a statement of
+# intent, so a future edit doesn't silently exclude them. The reasoning: an
+# unknown app's problem is obscurity, not scraping. Someone asking an AI
+# assistant "what app tracks Australian investment properties" is exactly the
+# customer this site exists for, and a blocked crawler cannot cite a page it
+# cannot read.
+#
+# Google-Extended governs Gemini and AI Overviews only — blocking it has no
+# effect on ordinary Google Search ranking, and allowing it has no downside
+# for a site with nothing confidential on it.
+# ---------------------------------------------------------------------------
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: CCBot
+Allow: /
+Disallow: /confirmed.html
+
+Sitemap: https://estiqo.com.au/sitemap.xml

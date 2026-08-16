@@ -8,14 +8,57 @@
 <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 
+<link rel="canonical" href="https://estiqo.com.au/">
+
 <!-- Link previews. The page had none before, so every share into a group
-     chat or a forum rendered as a bare URL. -->
+     chat or a forum rendered as a bare URL.
+
+     ⚠️ og:image MUST be absolute. It was `video/estiqo-poster.jpg` until
+     16 Aug 2026 — a relative path, which the spec doesn't allow and which
+     no scraper resolves. Facebook, LinkedIn, Slack and iMessage were all
+     silently dropping the image and rendering a text-only card, which is
+     the single worst-looking way for a link to arrive in a group chat. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Estiqo">
+<meta property="og:url" content="https://estiqo.com.au/">
+<meta property="og:locale" content="en_AU">
 <meta property="og:title" content="Estiqo — Your property portfolio hub">
 <meta property="og:description" content="Every number, document, contact and key date for your investment properties — in one beautiful, private hub on your iPhone.">
-<meta property="og:image" content="video/estiqo-poster.jpg">
+<meta property="og:image" content="https://estiqo.com.au/video/estiqo-poster.jpg">
+<meta property="og:image:alt" content="Estiqo's portfolio screen on an iPhone, showing total value, debt and monthly cash flow.">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://estiqo.com.au/video/estiqo-poster.jpg">
+
+<!-- Structured data. Deliberately claims only what's checkable: no
+     aggregateRating, because there are no reviews yet and inventing one is
+     both a Google penalty and a lie. `price: 0` is accurate — every property
+     is free forever; Premium is an in-app purchase, which this schema has no
+     field to misrepresent. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MobileApplication",
+  "name": "Estiqo",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "iOS 17.0 or later",
+  "description": "Estiqo keeps every number, document, contact and key date for your Australian investment properties in one private hub on your iPhone, with a one-tap accountant-ready EOFY export.",
+  "url": "https://estiqo.com.au/",
+  "image": "https://estiqo.com.au/img/icon.png",
+  "inLanguage": "en-AU",
+  "countriesSupported": "AU",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "AUD"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Estiqo",
+    "url": "https://estiqo.com.au/",
+    "email": "hello@estiqo.com.au"
+  }
+}
+</script>
 
 <link rel="icon" type="image/png" href="img/icon.png">
 <link rel="apple-touch-icon" href="img/icon.png">
@@ -25,6 +68,68 @@
      already-visible content. Its absence is the signal to the stylesheet
      that JS is unavailable, in which case nothing is ever hidden. -->
 <script>document.documentElement.classList.add("js");</script>
+
+<!-- The FAQ, machine-readable. The answers are already on the page verbatim —
+     this only restates them where a search engine or an AI answer engine can
+     lift them cleanly. Generated from the markup below rather than typed
+     twice, because two copies of an answer drift and the wrong one gets
+     quoted. Regenerate if the FAQ text changes. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is my financial data really private?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, and not as a policy promise. Estiqo has no accounts, no server and no analytics — there is no system on our end that your portfolio could be sent to. Everything is stored on your iPhone, and the only copy that leaves it is the backup file you export yourself, to wherever you choose to keep it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How many properties can I add for free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "As many as you own. There's no property limit on the free tier and no trial that runs out. The whole day-to-day side of Estiqo — cash flow, documents, leases, loans, contacts, key dates and photos — is free for your entire portfolio, permanently."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "So what does Premium actually unlock?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The end-of-year work and the analysis on top of it: EOFY packs for your accountant, the depreciation schedule, the CGT sale worksheet, cash flow forecasts, value over time, the equity and borrowing snapshot, portfolio analytics, and the due diligence checklists and calculators. In other words, the parts you reach for once a year or when you're deciding something — not the parts you use every week."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Estiqo give tax or financial advice?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Estiqo is a record-keeping tool that organises your figures and documents so your accountant has what they need. It doesn't give financial, tax or legal advice, and it isn't a substitute for a qualified professional."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does it run on?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "iPhone, on iOS 17 or later. iPad support is planned."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I cancel, or switch to lifetime?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — subscriptions are managed in your Apple Account settings and can be changed or cancelled at any time. Lifetime is a one-off purchase with nothing ongoing. Either way, everything you've already entered stays exactly where it is: on your phone."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 

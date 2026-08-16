@@ -1,0 +1,43 @@
+# Estiqo
+
+> An iPhone app that keeps every number, document, contact and key date for
+> Australian investment properties in one private hub, with a one-tap
+> accountant-ready EOFY export. Launching on the App Store 8 September 2026.
+
+Estiqo is built specifically for Australia rather than localised into it: the
+July–June financial year, the ATO's rental expense categories, and stamp duty
+calculated per state.
+
+It is built with no user accounts, no server and no analytics of any kind.
+Data is stored locally on the device using SwiftData. There is no cloud sync in
+version 1.0. The App Store privacy label reads "Data Not Collected" in every
+category.
+
+## Facts
+
+- Platform: iPhone, iOS 17.0 or later. iPad support planned, not shipped.
+- Price: every property is free, forever, with no limit on how many and no
+  trial period. Premium is an optional in-app purchase — A$59.99/year or
+  A$149.99 once.
+- Premium unlocks: EOFY export packs, depreciation schedule, CGT sale
+  worksheet, cash flow forecast, value over time, equity and borrowing
+  snapshot, portfolio analytics, due diligence checklists and calculators.
+- Free tier includes: unlimited properties, cash flow, income and expenses,
+  documents, receipts and photos, leases, loans, contacts, key dates, Face ID
+  lock and one-tap backup export.
+- Estiqo is a record-keeping tool. It does not provide financial, tax or legal
+  advice, and it does not connect to any bank, broker or financial institution.
+- Made in Australia by Adam Garing, sole trader, ABN 61 426 672 740.
+
+## Pages
+
+- [Home](https://estiqo.com.au/): what it does, pricing, FAQ, launch waitlist.
+- [Privacy policy](https://estiqo.com.au/privacy-policy.html): what the app
+  collects (nothing) and what the website collects (an email address, only if
+  you join the waitlist).
+- [Terms of use](https://estiqo.com.au/terms-of-use.html)
+
+## Contact
+
+- hello@estiqo.com.au — general and partnerships
+- support@estiqo.com.au — customers
