@@ -43,6 +43,10 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px -20px rgba(0, 0, 0, 0.22);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.05), 0 28px 60px -28px rgba(0, 0, 0, 0.3);
   --maxw: 1120px;
+  /* The page's side gutter. A token rather than a literal because the
+     pricing carousel has to cancel it out to bleed to the screen edge, and
+     the two must not drift apart. */
+  --gutter: 24px;
 
   /* Liquid field opacity — dialled down on mobile further below */
   --liquid-strength: 1;
@@ -63,6 +67,11 @@
     --green: #258153;
     --green-ink: #1F9D63;    /* 6.1:1 on black */
     --terracotta: #D99E6B;
+    /* Theme.swift has always carried a lighter red for dark mode
+       (0.929/0.353/0.376) — this file just never picked it up, because until
+       the waitlist form nothing used --negative for small text. The light
+       value is 3.6:1 on black and fails AA; this is 6.2:1. */
+    --negative: #ED5A60;
 
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px -20px rgba(0, 0, 0, 0.8);
     --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 28px 60px -28px rgba(0, 0, 0, 0.9);
@@ -108,7 +117,7 @@ button { font: inherit; color: inherit; }
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--gutter);
   position: relative;
   z-index: 1;
 }
@@ -464,7 +473,7 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
 .hero-grid {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--gutter);
   display: grid;
   grid-template-columns: 1fr minmax(300px, 0.82fr);
   gap: 56px;
@@ -1016,7 +1025,13 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 14px;
+  /* All four sides set deliberately. These are <p> elements, so anything
+     left unset inherits the UA's 1em margin — and on .price-amount that em
+     is the *price*'s font size, 42px here and 34px on a phone. The card's
+     largest gaps were therefore an accident that silently tracked the type
+     scale: 44px above the price and 42px below it, against the 12px and
+     14px everything else in the card was built on. */
+  margin: 0 0 22px;
 }
 .price-card.featured .price-name { color: var(--green-ink); }
 .price-amount {
@@ -1025,9 +1040,10 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
   letter-spacing: -0.035em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  margin: 0;
 }
 .price-amount span { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: -0.01em; }
-.price-sub { margin: 12px 0 0; font-size: 14.5px; color: var(--muted); }
+.price-sub { margin: 16px 0 0; font-size: 14.5px; color: var(--muted); }
 
 .price-alt {
   margin-top: 18px;
@@ -1049,7 +1065,17 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
   padding: 0;
   display: grid;
   gap: 12px;
+  /* Grows so the button below it stays pinned to the bottom of the card and
+     both cards' buttons line up. */
   flex: 1;
+  /* But the rows must not grow with it. A grid's default align-content
+     stretches auto-sized tracks to fill spare space, so the shorter card —
+     Free, with one item fewer and no lifetime panel — had its rows inflated
+     to 54, 75, 96 and 117px against a natural line height of 21px. The list
+     read as double-spaced next to Premium's tight one. Packing the rows to
+     the top puts the spare space in one block underneath instead, where it
+     belongs. */
+  align-content: start;
 }
 .price-list li {
   position: relative;
@@ -1067,6 +1093,20 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
   transform: rotate(-45deg);
 }
 .price-card .btn { width: 100%; }
+
+/* Carousel-only chrome, and gated on the carousel actually overflowing
+   rather than on the breakpoint. Between roughly 790px and 860px the two
+   cards fit side by side inside the scroller anyway — keying off the
+   media query alone told those visitors to swipe something that doesn't
+   move. JS adds .is-carousel only when scrollWidth exceeds clientWidth,
+   and re-checks on resize. `display: none` is also what keeps the dots
+   out of the accessibility tree when there's nothing to scroll. */
+.swipe-hint,
+.price-dots { display: none; }
+
+#pricing.is-carousel .swipe-hint,
+#pricing.is-carousel .price-dots { display: flex; }
+
 .pricing-fine {
   text-align: center;
   font-size: 13.5px;
@@ -1134,8 +1174,94 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
 .final img.mark { width: 62px; height: 62px; border-radius: 22.5%; margin: 0 auto 26px; box-shadow: var(--shadow-lift); }
 .final h2 { max-width: 15ch; margin: 0 auto 20px; }
 .final .lede { margin: 0 auto; }
+.final .lede strong { color: var(--ink); font-weight: 600; }
 .final .cta-row { justify-content: center; }
-.final .cta-fine { text-align: center; }
+.final .cta-fine { text-align: center; max-width: 46ch; margin-left: auto; margin-right: auto; }
+.cta-fine .fine-link { color: var(--green-ink); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- 22b. Launch waitlist form ---------- */
+
+/* Posts straight to a third-party form endpoint — the site is static on
+   GitHub Pages, so there is no backend here to receive anything, and
+   deliberately so (the privacy section two screens up promises exactly
+   that). The endpoint URL and the input's `name` both live in the markup
+   rather than in JS, so switching provider is one attribute each and the
+   form still submits natively if this stylesheet's companion script is
+   blocked. */
+
+.notify { margin: 34px auto 18px; max-width: 520px; }
+
+.notify-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.notify-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 52px;               /* matches .btn, so the row has one baseline */
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;            /* below 16px iOS zooms the page on focus */
+  letter-spacing: -0.01em;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.22s var(--ease);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.notify-input::placeholder { color: var(--muted); }
+.notify-input:focus { border-color: var(--green); }
+.notify-input:disabled { opacity: 0.6; }
+
+/* The browser's own :invalid fires while you are still typing the first
+   letter, so validity styling is driven by a class the script sets on
+   submit instead. */
+.notify.is-invalid .notify-input { border-color: var(--negative); }
+
+.notify-btn { flex: 0 0 auto; border-radius: 999px; }
+.notify-btn:disabled { cursor: default; }
+.notify.is-sending .notify-btn-label { visibility: hidden; }
+.notify:not(.is-sending) .notify-spinner { display: none; }
+
+/* Overlaid rather than swapped in, so the button keeps the width it had
+   before the click and the row doesn't reflow mid-submit. */
+.notify-spinner {
+  position: absolute;
+  top: 50%; left: 50%;
+  margin: -9px 0 0 -9px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  opacity: 0.8;
+  animation: notify-spin 0.7s linear infinite;
+}
+@keyframes notify-spin { to { transform: rotate(360deg); } }
+
+/* Off-screen, not hidden — see the note in the markup. */
+.notify-trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+
+.notify-status {
+  margin: 14px 0 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  min-height: 1.5em;          /* reserve the line so success doesn't jump the page */
+  color: var(--muted);
+}
+.notify.is-invalid .notify-status,
+.notify.is-error .notify-status { color: var(--negative); }
+.notify.is-done .notify-status { color: var(--green-ink); font-weight: 600; }
+.notify.is-done .notify-row { display: none; }
 
 /* ---------- 23. Footer ---------- */
 
@@ -1234,7 +1360,114 @@ footer {
   .split-copy .lede { margin-bottom: 26px; }
   .scatter-grid, .stats, .eofy-pack, .au-chips, .resolve-card { max-width: none; }
 
-  .price-grid { grid-template-columns: minmax(0, 460px); }
+  /* ---- Pricing becomes a snap carousel ----
+     Stacked, "Get Premium" sat the better part of a screen-height below
+     "Start free", so the two plans were never on screen together and the
+     comparison the section exists to make didn't happen. Side-by-side
+     doesn't fit either. Snapping horizontally does both: one plan reads at
+     full size, and the next one is visibly cut off at the edge, which is
+     the affordance — the hint text and dots only confirm what the peek
+     already says. */
+  .price-grid {
+    display: flex;
+    grid-template-columns: none;
+    /* Inherited from the two-column rule, and actively harmful here: a flex
+       container that centres content it can't fit spills equally off both
+       ends, and the left half of that overflow is unreachable — scrollLeft
+       is already 0. The first card sat 108px off-screen with no way to
+       scroll back to it. */
+    justify-content: flex-start;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    /* Cancel the page gutter, then re-apply it as padding: the scroll
+       track runs edge to edge while the cards still line up with every
+       other section's left margin. */
+    margin-left: calc(var(--gutter) * -1);
+    margin-right: calc(var(--gutter) * -1);
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+    /* overflow-x: auto forces overflow-y to compute as auto, which clips
+       the featured card's lift shadow and can raise a stray vertical
+       scrollbar. Vertical padding gives the shadow room inside the box. */
+    padding-top: 6px;
+    padding-bottom: 14px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    /* Swiping the last card shouldn't start navigating back. */
+    overscroll-behavior-x: contain;
+  }
+  .price-grid::-webkit-scrollbar { display: none; }
+  .price-grid:focus-visible { outline-offset: -2px; }
+
+  .price-card {
+    flex: 0 0 min(86%, 380px);
+    scroll-snap-align: center;
+  }
+
+  /* One card at a time has to hold its whole feature list on a phone screen,
+     so the vertical rhythm tightens across the board. Desktop keeps the
+     roomier spacing — there the cards sit side by side with the section
+     heading above them and the air is doing work. */
+  .price-name { margin-bottom: 12px; }
+  .price-sub { margin-top: 10px; }
+  .price-alt { margin-top: 14px; padding: 12px 14px; }
+  .price-list { margin: 18px 0 20px; gap: 9px; }
+
+  /* Visibility is the .is-carousel gate above; this is only appearance. */
+  .swipe-hint {
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin: 22px 0 0;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .swipe-hint svg { width: 15px; height: 15px; }
+  /* Nudged once on arrival, not looped — the page's standing rule about
+     the CTA sheen applies here too: a permanent animation reads as
+     urgency rather than as an affordance. */
+  .swipe-hint.in svg { animation: swipe-nudge 1.5s var(--ease) 0.4s 2; }
+  @keyframes swipe-nudge {
+    0%, 60%, 100% { transform: translateX(0); }
+    30% { transform: translateX(4px); }
+  }
+
+  .price-dots {
+    justify-content: center;
+    /* No gap: each button is already a full 44px target and they sit flush,
+       so there's no dead strip between them to tap into. */
+    gap: 0;
+    margin-top: 4px;
+  }
+  .price-dot {
+    /* 44×44 — the same touch minimum .btn's 52px height is measured
+       against. The 7px circle is only the paint; the button is the target.
+       Growing the target with a pseudo-element instead would have let the
+       two overlap, and an overlapped target belongs to whichever element
+       paints last, which would have made the first dot nearly unhittable. */
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    appearance: none;
+    -webkit-appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+  .price-dot::before {
+    content: "";
+    display: block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--line);
+    transition: background-color 0.25s var(--ease), transform 0.25s var(--ease);
+  }
+  .price-dot.is-active::before { background: var(--green); transform: scale(1.25); }
 
   /* Steps turn side-on rather than stacking. Stacked, three captions each
      under a full-width crop ran to about a screen and a half for what is
@@ -1270,10 +1503,11 @@ footer {
        competition with type at close viewing distance. */
     --liquid-strength: 0.72;
     --radius: 18px;
+    /* .container and the pricing carousel's edge-bleed both read this. */
+    --gutter: 20px;
   }
   body { font-size: 16px; }
 
-  .container { padding: 0 20px; }
   .nav-inner { padding: 10px 20px; }
 
   .hero h1 { letter-spacing: -0.035em; }
@@ -1281,6 +1515,11 @@ footer {
   .cta-row { flex-direction: column; align-items: stretch; gap: 10px; }
   .cta-row .btn { width: 100%; }
   .cta-fine { text-align: center; }
+
+  /* Side by side, the input is down to ~150px on a small phone — narrower
+     than the placeholder it has to show. Stacked, both stay full width. */
+  .notify-row { flex-direction: column; gap: 10px; }
+  .notify-btn { width: 100%; }
 
   .trust-inner { gap: 12px 22px; padding: 18px 20px; }
   .trust-item { font-size: 13px; }
@@ -1305,8 +1544,8 @@ footer {
   .step h3 { font-size: 17px; }
   .step p:last-child { font-size: 14px; }
 
-  .price-card { padding: 28px 22px; }
-  .price-amount { font-size: 36px; }
+  .price-card { padding: 26px 22px; }
+  .price-amount { font-size: 34px; }
 
   .faq-q { font-size: 16px; padding: 20px 2px; }
   .video-frame { border-radius: 16px; }
@@ -1356,4 +1595,11 @@ footer {
   .btn-primary::after { display: none; }
   .faq-a { transition: none; }
   .faq-q .chev { transition: none; }
+
+  /* The arrow nudge is an animation rather than a transition, so the blanket
+     rules above don't reach it. The hint's text still says "swipe". */
+  .swipe-hint.in svg { animation: none; }
+  .price-dot::before { transition: none; }
+  /* Snapping is fine — it's the smooth interpolation that isn't, and that's
+     handled in JS, which passes behavior:"auto" when motion is reduced. */
 }

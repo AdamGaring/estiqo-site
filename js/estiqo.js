@@ -286,4 +286,207 @@
       loadVideo();
     }
   }
+
+  /* ---------- Pricing carousel dots ---------- */
+
+  /* The carousel itself is pure CSS — scroll-snap does the work, and it
+     keeps working with this file blocked. All that's added here is telling
+     the visitor where they are, and letting them tap to move.
+
+     Position comes from an IntersectionObserver rooted on the scroller
+     rather than a scroll handler, per the no-layout-reads-on-scroll rule at
+     the top of this file: momentum scrolling on iOS fires scroll events far
+     faster than a card can change. */
+
+  var priceGrid = document.getElementById("priceGrid");
+  var priceDots = document.getElementById("priceDots");
+
+  if (priceGrid && priceDots && "IntersectionObserver" in window) {
+    var priceCards = priceGrid.querySelectorAll(".price-card");
+    var dots = priceDots.querySelectorAll(".price-dot");
+
+    /* The hint and dots are gated on the scroller actually overflowing, not
+       on the breakpoint: there's a band around 800–860px where the layout
+       has already switched to flex but both cards still fit, and telling
+       someone to swipe something that can't move is worse than showing
+       nothing. Re-checked on resize, and on load because web fonts can
+       change the card heights and widths after first paint. */
+    var pricingSection = document.getElementById("pricing");
+
+    var syncCarouselState = function () {
+      var overflows = priceGrid.scrollWidth > priceGrid.clientWidth + 1;
+      if (pricingSection) pricingSection.classList.toggle("is-carousel", overflows);
+      return overflows;
+    };
+
+    var carouselActive = function () {
+      return pricingSection ? pricingSection.classList.contains("is-carousel") : false;
+    };
+
+    syncCarouselState();
+
+    /* ResizeObserver rather than a window resize listener: it also catches
+       the reflows a resize event never fires for — a late web font changing
+       the card text metrics, or a scrollbar appearing and taking width off
+       the container. Falls back to the resize event where it's missing. */
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(syncCarouselState).observe(priceGrid);
+    } else {
+      window.addEventListener("resize", syncCarouselState, { passive: true });
+    }
+    // Card widths can settle after the grid's own box has stopped changing.
+    window.addEventListener("load", syncCarouselState);
+
+    var setActiveDot = function (index) {
+      for (var i = 0; i < dots.length; i++) {
+        dots[i].classList.toggle("is-active", i === index);
+      }
+    };
+
+    if (priceCards.length === dots.length) {
+      var priceObserver = new IntersectionObserver(function (entries) {
+        if (!carouselActive()) return;
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          setActiveDot([].indexOf.call(priceCards, entry.target));
+        });
+      }, { root: priceGrid, threshold: 0.6 });
+
+      for (var c = 0; c < priceCards.length; c++) priceObserver.observe(priceCards[c]);
+
+      priceDots.addEventListener("click", function (e) {
+        var dot = e.target.closest(".price-dot");
+        if (!dot) return;
+        var index = [].indexOf.call(dots, dot);
+        var card = priceCards[index];
+        if (!card) return;
+        /* scrollIntoView would also scroll the *page* to bring the section
+           into view, which yanks it around when the visitor only asked to
+           change card. Scrolling the container directly moves one axis of
+           one element.
+
+           Measured from the two rects rather than card.offsetLeft, which is
+           relative to the nearest positioned ancestor — that's .container
+           here, not the scroller, so it would be off by the carousel's
+           negative margin and padding. Reading layout inside a click is
+           fine; the rule at the top of this file is about scroll handlers. */
+        var cardRect = card.getBoundingClientRect();
+        var gridRect = priceGrid.getBoundingClientRect();
+        priceGrid.scrollTo({
+          left: priceGrid.scrollLeft + (cardRect.left - gridRect.left)
+                - (priceGrid.clientWidth - cardRect.width) / 2,
+          behavior: reduceMotion.matches ? "auto" : "smooth"
+        });
+        setActiveDot(index);
+      });
+    }
+  }
+
+  /* ---------- Launch waitlist ---------- */
+
+  /* Progressive enhancement over a plain <form> that already works on its
+     own: without this block the browser posts natively and the visitor
+     lands on the provider's own confirmation page. All this adds is
+     staying on the page. Consequently nothing here invents the endpoint or
+     the field name — both come from the markup, so changing provider never
+     means editing JavaScript. */
+
+  var notifyForm = document.getElementById("notifyForm");
+
+  if (notifyForm) {
+    var notifyStatus = document.getElementById("notifyStatus");
+    var notifyInput = document.getElementById("notifyEmail");
+    var notifyTrap = document.getElementById("notifyCompany");
+    var notifyBtn = notifyForm.querySelector(".notify-btn");
+    var notifySent = false;
+
+    /* Deliberately permissive. The only thing worth catching here is a
+       genuine typo — no @, nothing after the dot — because the provider
+       validates properly and a regex that tries to be clever rejects real
+       addresses. */
+    var looksLikeEmail = function (value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+    };
+
+    var setState = function (state, message) {
+      notifyForm.classList.remove("is-sending", "is-error", "is-invalid", "is-done");
+      if (state) notifyForm.classList.add(state);
+      notifyStatus.textContent = message || "";
+      var busy = state === "is-sending";
+      notifyBtn.disabled = busy || state === "is-done";
+      notifyInput.disabled = busy;
+    };
+
+    notifyForm.addEventListener("submit", function (e) {
+      // The endpoint is a placeholder until the mailing-list account exists.
+      // Submitting anyway would POST into nothing and lose the signup while
+      // showing the visitor a success state, so refuse loudly instead.
+      if (notifyForm.action.indexOf("PASTE_FORM_ENDPOINT_HERE") !== -1) {
+        e.preventDefault();
+        setState("is-error", "The signup form isn't connected yet — please check back shortly.");
+        return;
+      }
+
+      if (notifySent) { e.preventDefault(); return; }
+
+      // A filled honeypot is a bot. Drop it silently and show the same
+      // success it would have got, so it has nothing to learn from.
+      if (notifyTrap && notifyTrap.value) {
+        e.preventDefault();
+        notifySent = true;
+        setState("is-done", "Thanks — you're on the list.");
+        return;
+      }
+
+      var email = notifyInput.value.trim();
+      if (!looksLikeEmail(email)) {
+        e.preventDefault();
+        setState("is-invalid", "That doesn't look like an email address.");
+        notifyInput.focus();
+        return;
+      }
+
+      // Everything below needs fetch + FormData. Where either is missing,
+      // fall through to the browser's own submit rather than blocking it.
+      if (!window.fetch || !window.FormData) return;
+
+      e.preventDefault();
+
+      /* Built before the sending state, not after: that state disables the
+         input, and a disabled field is omitted from FormData entirely —
+         which would post an empty address. */
+      var data = new FormData(notifyForm);
+      data.delete("hp_company");
+
+      setState("is-sending", "Signing you up…");
+
+      fetch(notifyForm.action, {
+        method: "POST",
+        body: data,
+        headers: { Accept: "application/json" }
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          notifySent = true;
+          setState("is-done", "You're on the list. We'll email you on launch day.");
+        })
+        .catch(function () {
+          /* Either the network failed or the provider didn't send CORS
+             headers — and from here those are indistinguishable, since a
+             blocked response still means the POST may well have arrived.
+             Handing it to a native submit is the recovery: worst case the
+             address arrives twice, which every provider dedupes, and best
+             case a signup that would have been silently lost is kept. */
+          setState(null, "");
+          notifyForm.submit();
+        });
+    });
+
+    // Clear a validation complaint as soon as they start fixing it.
+    notifyInput.addEventListener("input", function () {
+      if (notifyForm.classList.contains("is-invalid") || notifyForm.classList.contains("is-error")) {
+        setState(null, "");
+      }
+    });
+  }
 })();

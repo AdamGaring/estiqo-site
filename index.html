@@ -491,15 +491,21 @@
         </div>
         <div class="privacy-fact reveal" style="--i:1">
           <strong>No server</strong>
-          <span>There is no Estiqo backend. There's nothing to breach.</span>
+          <span>There is no Estiqo backend. Your portfolio never leaves your phone.</span>
         </div>
         <div class="privacy-fact reveal" style="--i:2">
           <strong>No analytics</strong>
           <span>No tracking SDKs, no ad networks, no telemetry.</span>
         </div>
         <div class="privacy-fact reveal" style="--i:3">
-          <strong>Your iCloud</strong>
-          <span>Sync through your own private iCloud, or don't sync at all.</span>
+          <!-- Was "Your iCloud — sync through your own private iCloud". Sync
+               isn't in 1.0 (the Settings toggle is hidden on real installs
+               until the CloudKit capability exists), so this tile promised a
+               feature nobody could find. Backup is the real, shipping answer
+               to the question the tile is actually being asked: what happens
+               if I lose the phone? -->
+          <strong>Your backup</strong>
+          <span>Export the lot to a file you keep, whenever you like.</span>
         </div>
       </div>
 
@@ -563,9 +569,20 @@
       <p class="eyebrow reveal" style="justify-content:center">Pricing</p>
       <h2 class="reveal" style="--i:1">Every property, free. Pay only for tax time.</h2>
       <p class="lede reveal" style="--i:2">Track as many properties as you own, for as long as you own them, at no cost. Premium adds the accountant-ready EOFY pack and the full investment toolkit.</p>
+      <!-- Shown only where the cards actually become a carousel. On desktop
+           both plans are side by side and telling someone to swipe would be
+           an instruction to do nothing. -->
+      <p class="swipe-hint reveal" style="--i:3" aria-hidden="true">Swipe to compare plans
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </p>
     </div>
 
-    <div class="price-grid">
+    <!-- Two plans side by side above 860px; a snap carousel below it, where
+         stacking put 'Get Premium' most of a screen-height below 'Start
+         free' and most visitors never saw the comparison at all. The
+         tabindex/role pair is what makes the scroller reachable without a
+         pointer — a keyboard user tabs to it and arrows across. -->
+    <div class="price-grid" id="priceGrid" role="group" aria-label="Pricing plans" tabindex="0">
       <div class="price-card reveal">
         <p class="price-name">Free</p>
         <p class="price-amount">$0</p>
@@ -575,7 +592,7 @@
           <li>Cash flow, income and expenses</li>
           <li>Documents, receipts and photos</li>
           <li>Leases, loans, contacts and key dates</li>
-          <li>Face ID lock and optional iCloud sync</li>
+          <li>Face ID lock and one-tap backup</li>
           <li>No ads, no account, no trial</li>
         </ul>
         <a class="btn btn-secondary" href="#final">Start free</a>
@@ -602,6 +619,15 @@
       </div>
     </div>
 
+    <!-- Real buttons, not decoration: they're the non-swipe way to reach the
+         second plan. Hidden entirely on desktop, which takes them out of the
+         accessibility tree too rather than leaving controls that scroll
+         something the visitor can already see in full. -->
+    <div class="price-dots" id="priceDots">
+      <button class="price-dot is-active" type="button" aria-label="Show the Free plan"></button>
+      <button class="price-dot" type="button" aria-label="Show the Premium plan"></button>
+    </div>
+
     <p class="pricing-fine">Prices in AUD, charged through your Apple Account. Subscriptions renew unless cancelled at least 24 hours before the period ends — manage or cancel anytime in your App Store settings. Estiqo is a record-keeping tool and does not provide financial or tax advice.</p>
   </div>
 </section>
@@ -622,7 +648,7 @@
           Is my financial data really private?
           <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
         </button>
-        <div class="faq-a"><p>Yes, and not as a policy promise. Estiqo has no accounts, no server and no analytics — there is no system on our end that your portfolio could be sent to. Everything is stored on your iPhone, and only if you switch it on, synced through your own private iCloud, which we have no access to either.</p></div>
+        <div class="faq-a"><p>Yes, and not as a policy promise. Estiqo has no accounts, no server and no analytics — there is no system on our end that your portfolio could be sent to. Everything is stored on your iPhone, and the only copy that leaves it is the backup file you export yourself, to wherever you choose to keep it.</p></div>
       </div>
 
       <div class="faq-item">
@@ -683,21 +709,60 @@
   <div class="container">
     <img class="mark reveal" src="img/icon.png" width="62" height="62" alt="">
     <h2 class="reveal" style="--i:1">Your portfolio, finally in one place.</h2>
-    <p class="lede reveal" style="--i:2">Set up your first property in a few minutes. Add the rest whenever you like.</p>
+    <p class="lede reveal" style="--i:2">Estiqo arrives on the App Store on <strong>Tuesday 8 September</strong>. Leave your email and you'll know the moment it's live.</p>
 
-    <div class="cta-row reveal" style="--i:3">
-      <!-- Deliberately a <span>, not a link. Until the listing is live
-           there is nowhere for it to go, and pointing it back up at the
-           pricing table made a loop: "Get Premium" sent you here, and this
-           sent you back. On launch day it becomes an <a href="https://apps.apple.com/…">
-           and the two lines of copy become "Download on the / App Store". -->
-      <span class="btn btn-primary btn-store is-status">
-        <svg class="apple-glyph" viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-        <span class="store-copy"><small>Coming soon to the</small><strong>App Store</strong></span>
-      </span>
-    </div>
+    <!-- ON LAUNCH DAY (8 Sep 2026): the waitlist form below has done its job
+         and should be replaced by the real download button —
 
-    <p class="cta-fine reveal" style="--i:4">Free for <strong>every property</strong>. Private by design.</p>
+           <div class="cta-row">
+             <a class="btn btn-primary btn-store" href="https://apps.apple.com/…">
+               …apple-glyph svg…
+               <span class="store-copy"><small>Download on the</small><strong>App Store</strong></span>
+             </a>
+           </div>
+
+         The badge used to live here as a deliberate <span> rather than a link,
+         because until the listing existed there was nowhere for it to go and
+         pointing it back at the pricing table made a loop. A form is the
+         better answer to the same problem: it gives the visitor something to
+         do with the intent they arrived with, instead of asking them to
+         remember a date. `.btn.is-status` in the stylesheet is what the badge
+         used, and is kept for the same "status, not a control" case. -->
+    <!-- Kit (formerly ConvertKit), form 9807240. Double opt-in is on, so a
+         successful POST here sends a confirmation email rather than adding a
+         subscriber outright — which is what makes this Spam Act consent
+         rather than an assertion of it. The field name below is Kit's own
+         (`email_address`, not `email`); both it and the action come straight
+         from Kit's HTML embed, and they are the only two values that need to
+         change if the provider ever does. -->
+    <form class="notify reveal" id="notifyForm" style="--i:3" method="post" novalidate
+          action="https://app.kit.com/forms/9807240/subscriptions">
+      <div class="notify-row">
+        <label class="sr-only" for="notifyEmail">Email address</label>
+        <input class="notify-input" id="notifyEmail" type="email" name="email_address"
+               placeholder="you@example.com" autocomplete="email" inputmode="email"
+               required aria-describedby="notifyFine">
+
+        <!-- Honeypot. Off-screen rather than display:none, which the cruder
+             bots know to skip, and checked only in JS so no provider has to
+             understand the field name. -->
+        <div class="notify-trap" aria-hidden="true">
+          <label for="notifyCompany">Company</label>
+          <input id="notifyCompany" name="hp_company" type="text" tabindex="-1" autocomplete="off">
+        </div>
+
+        <button class="btn btn-primary notify-btn" type="submit">
+          <span class="notify-btn-label">Notify me</span>
+          <span class="notify-spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+      <p class="notify-status" id="notifyStatus" role="status" aria-live="polite"></p>
+    </form>
+
+    <p class="cta-fine reveal" id="notifyFine" style="--i:4">
+      One email when it launches, then nothing unless you ask. No spam, unsubscribe any time —
+      <a class="fine-link" href="privacy-policy.html">privacy policy</a>.
+    </p>
   </div>
 </section>
 

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You're on the list — Estiqo</title>
+<meta name="description" content="You're confirmed for the Estiqo launch list.">
+<!-- Nobody should ever arrive here from a search result; this page only makes
+     sense as the last step of the double opt-in. -->
+<meta name="robots" content="noindex">
+
+<link rel="icon" href="img/icon.png">
+<link rel="stylesheet" href="css/estiqo.css">
+
+<style>
+  /* Everything visual comes from estiqo.css's tokens. The handful of rules
+     here are only the centring this one page needs, and none of them depend
+     on js/estiqo.js — the page deliberately ships no script, so the liquid
+     field and .reveal animations are left off rather than being included and
+     silently sitting at opacity 0 with nothing to trigger them. */
+  .done {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 0;
+  }
+  .done .container { max-width: 560px; }
+  .done .mark {
+    width: 68px; height: 68px;
+    border-radius: 22.5%;
+    margin: 0 auto 28px;
+    box-shadow: var(--shadow-lift);
+  }
+  .done h1 {
+    font-size: clamp(32px, 5.6vw, 46px);
+    margin: 0 0 20px;
+  }
+  .done .lede { margin: 0 auto 34px; }
+  .done .tick {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 22px;
+    padding: 7px 14px 7px 11px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--green) 14%, transparent);
+    color: var(--green-ink);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .done .tick svg { width: 15px; height: 15px; }
+  .done .cta-fine { margin-top: 26px; }
+</style>
+</head>
+<body>
+
+<main class="done">
+  <div class="container">
+    <img class="mark" src="img/icon.png" width="68" height="68" alt="">
+
+    <p class="tick">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+      Email confirmed
+    </p>
+
+    <h1>You're on the list.</h1>
+
+    <p class="lede">We'll email you on <strong>Tuesday 8 September</strong>, the day Estiqo lands on the App Store. That's the only email you'll get between now and then.</p>
+
+    <a class="btn btn-secondary" href="/">Back to estiqo.com.au</a>
+
+    <p class="cta-fine">Changed your mind? Every email has an unsubscribe link, and one click is all it takes.</p>
+  </div>
+</main>
+
+</body>
+</html>
