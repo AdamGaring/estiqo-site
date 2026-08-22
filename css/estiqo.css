@@ -132,7 +132,19 @@ button { font: inherit; color: inherit; }
   border: 0;
 }
 
-/* Sections own their liquid field, so each one clips its own blobs. */
+/* Sections own their liquid field, so each one clips its own blobs.
+
+   Deliberately plain `hidden`, not `clip` with an `overflow-clip-margin`.
+   The glows were never actually being cut here — every glowing tile needs
+   at most ~47px of bloom and each sits 50-400px inside its own section —
+   so a clip margin bought nothing and cost twice: permitted overflow
+   counts toward the document's scrollable width, which left every
+   full-bleed section 90px short of the right edge, and clipping that back
+   at the root stopped the page scrolling entirely.
+
+   The harsh edges came from the pricing carousel's own overflow and from
+   single-layer shadows that ended rather than faded. Both are fixed where
+   they live. */
 section { position: relative; overflow: hidden; }
 
 /* ---------- 3. Type scale ---------- */
@@ -649,6 +661,11 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
   justify-content: center;
   margin: 30px 0;
   color: var(--green);
+  /* Matches .scatter-grid and .resolve-card so all three share one centre
+     line. Without the cap the arrow centres on the full column while the
+     two boxes it sits between are capped at 460px, leaving it ~20px right
+     of the stack it's meant to point down. */
+  max-width: 460px;
 }
 .arrow-down svg { width: 26px; height: 26px; }
 
@@ -1358,7 +1375,7 @@ footer {
   .split { grid-template-columns: 1fr; gap: 40px; }
   .split.reverse .split-visual { order: 0; }
   .split-copy .lede { margin-bottom: 26px; }
-  .scatter-grid, .stats, .eofy-pack, .au-chips, .resolve-card { max-width: none; }
+  .scatter-grid, .stats, .eofy-pack, .au-chips, .resolve-card, .arrow-down { max-width: none; }
 
   /* ---- Pricing becomes a snap carousel ----
      Stacked, "Get Premium" sat the better part of a screen-height below
@@ -1389,9 +1406,20 @@ footer {
     padding-right: var(--gutter);
     /* overflow-x: auto forces overflow-y to compute as auto, which clips
        the featured card's lift shadow and can raise a stray vertical
-       scrollbar. Vertical padding gives the shadow room inside the box. */
-    padding-top: 6px;
-    padding-bottom: 14px;
+       scrollbar. Vertical padding gives the shadow room inside the box.
+
+       Sized against the bloom, not guessed. The card's halo is inset
+       -26px under a 42px blur, so its light reaches ~47px past the card;
+       at the old 6/14px it was sliced flat top and bottom, which is the
+       hard horizontal edge that showed across the card on a phone. These
+       values clear that reach by ~30px, so the glow has fully faded
+       before it meets the scroller's clip and no edge is findable. The
+       negative margins hand the space straight back, so the section's
+       rhythm is unchanged. */
+    padding-top: 76px;
+    padding-bottom: 80px;
+    margin-top: -70px;
+    margin-bottom: -66px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     /* Swiping the last card shouldn't start navigating back. */
@@ -1602,4 +1630,1337 @@ footer {
   .price-dot::before { transition: none; }
   /* Snapping is fine — it's the smooth interpolation that isn't, and that's
      handled in JS, which passes behavior:"auto" when motion is reduced. */
+}
+
+
+/* ============================================================
+   27. MOTION 2.0
+   ------------------------------------------------------------
+   The scroll-choreography layer. Everything here is driven by
+   custom properties the engine in estiqo.js writes:
+
+     --scroll-p   whole-page reading progress (on <html>)
+     --hp         hero progress, 0 at top of page
+     --p          per-scene progress, 0..1 through the viewport
+
+   Rules of the layer:
+   - Only transform and opacity are ever computed from progress.
+   - Every scrub rule lives behind `.js` and the no-preference
+     motion query, and defaults var(--p, 1) so a dead engine
+     leaves the page at its finished state, never half-built.
+   - Ambient glow (the aurora and beam) is keyframed, joins the
+     blobs' .is-live gating, and never reads progress at all.
+   ============================================================ */
+
+/* ---------- 27.1 Reading progress hairline ---------- */
+
+.nav::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--green-ink));
+  transform: scaleX(var(--scroll-p, 0));
+  transform-origin: left;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav::after { display: none; }
+}
+
+/* ---------- 27.2 The glow system ---------- */
+
+/* The aurora: one slow conic sweep of the two brand colours behind a
+   section's field. Same performance contract as the blobs — the blur is
+   static, only the rotation animates, and .is-live pauses it off screen. */
+.aurora {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 110vmax;
+  height: 110vmax;
+  margin: -55vmax 0 0 -55vmax;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--green) 60%, transparent) 55deg,
+    transparent 130deg,
+    color-mix(in srgb, var(--terracotta) 52%, transparent) 205deg,
+    transparent 275deg,
+    color-mix(in srgb, var(--green) 44%, transparent) 330deg,
+    transparent 360deg
+  );
+  filter: blur(90px);
+  opacity: calc(0.16 * var(--liquid-strength));
+  animation: aurora-spin 74s linear infinite;
+  animation-play-state: paused;
+  pointer-events: none;
+}
+.is-live .aurora { animation-play-state: running; }
+@keyframes aurora-spin { to { transform: rotate(360deg); } }
+
+/* The beam: Huly's vertical shaft of light, translated into daylight.
+   A soft column of brand green rising behind the hero device, breathing
+   slowly, with a bloom pooled where the device sits. */
+.hero-glow {
+  position: absolute;
+  inset: -12% -30%;
+  z-index: 0;
+  pointer-events: none;
+}
+.hero-glow .beam {
+  position: absolute;
+  left: 50%;
+  top: -18%;
+  width: 150px;
+  height: 125%;
+  margin-left: -75px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--green) 34%, transparent) 34%,
+    color-mix(in srgb, var(--green) 52%, transparent) 62%,
+    color-mix(in srgb, var(--terracotta) 30%, transparent) 88%,
+    transparent 100%
+  );
+  filter: blur(34px);
+  animation: beam-breathe 7.5s var(--ease-soft) infinite alternate;
+}
+.hero-glow .bloom {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 480px;
+  height: 480px;
+  margin: -240px 0 0 -240px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--green) 46%, transparent) 0%,
+    color-mix(in srgb, var(--green) 20%, transparent) 42%,
+    transparent 70%);
+  filter: blur(46px);
+  animation: bloom-breathe 9s var(--ease-soft) -3s infinite alternate;
+}
+@keyframes beam-breathe {
+  from { opacity: 0.5; transform: scaleX(0.92); }
+  to   { opacity: 0.85; transform: scaleX(1.1); }
+}
+@keyframes bloom-breathe {
+  from { opacity: 0.42; transform: scale(0.94); }
+  to   { opacity: 0.75; transform: scale(1.08); }
+}
+/* Glow reads brighter against dark glass. */
+@media (prefers-color-scheme: dark) {
+  .hero-glow .beam { filter: blur(38px); }
+  .aurora { opacity: calc(0.24 * var(--liquid-strength)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow .beam, .hero-glow .bloom, .aurora { animation: none; }
+}
+@media (max-width: 860px) {
+  .hero-glow .beam { width: 110px; margin-left: -55px; }
+  .hero-glow .bloom { width: 340px; height: 340px; margin: -170px 0 0 -170px; }
+}
+/* The beam and bloom obey the same contract as the blobs: nothing
+   animates while its section is off screen. */
+[data-liquid]:not(.is-live) .hero-glow .beam,
+[data-liquid]:not(.is-live) .hero-glow .bloom { animation-play-state: paused; }
+
+/* Richer fields everywhere — the glow is a feature, not a wash. */
+.hero .blob-1 { --blob-o: 0.55; }
+.hero .blob-2 { --blob-o: 0.4; }
+.hero .blob-3 { --blob-o: 0.34; }
+.band .blob-1 { --blob-o: 0.34; }
+.band .blob-2 { --blob-o: 0.26; }
+.final .blob-1 { --blob-o: 0.4; }
+.final .blob-2 { --blob-o: 0.28; }
+.final .blob-3 { --blob-o: 0.22; }
+
+/* ---------- 27.3 Hero choreography ---------- */
+
+/* Headline words rise one by one on arrival. Pure CSS animation, so it
+   plays with JS blocked and is removed wholesale under reduced motion. */
+.hero h1 .w {
+  display: inline-block;
+  animation: word-rise 0.8s var(--ease) both;
+  animation-delay: calc(var(--wi, 0) * 95ms + 0.1s);
+}
+@keyframes word-rise {
+  from { opacity: 0; transform: translate3d(0, 26px, 0); filter: blur(6px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+
+/* The floating fragments: the six places a portfolio currently lives,
+   drifting in front of the glow. As the visitor scrolls, they converge
+   into the device and dissolve — the page's thesis in one movement.
+
+   Three transform layers, deliberately:
+     .hero-frags  pointer drift (JS-written --px/--py)
+     .frag        scroll convergence (calc of --hp) on `transform`
+     .frag        ambient bob on the separate `translate` property,
+                  which composes with `transform` instead of fighting it */
+.hero-frags {
+  position: absolute;
+  inset: -6% -12%;
+  z-index: 2;
+  pointer-events: none;
+  transform: translate3d(calc(var(--px, 0) * 1px), calc(var(--py, 0) * 1px), 0);
+  transition: transform 1s var(--ease-soft);
+}
+.frag {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  color: var(--ink);
+  opacity: calc(1 - var(--hp, 0) * 1.45);
+  transform:
+    translate3d(calc(var(--tx, 0px) * var(--hp, 0)), calc(var(--ty, 0px) * var(--hp, 0)), 0)
+    rotate(calc(var(--fr, 0deg) * (1 - var(--hp, 0))))
+    scale(calc(1 - 0.45 * var(--hp, 0)));
+  animation:
+    frag-in 0.9s var(--ease) calc(0.55s + var(--fi, 0) * 0.13s) backwards,
+    frag-bob 6.5s var(--ease-soft) calc(var(--fi, 0) * -1.4s) infinite alternate;
+}
+.frag svg { width: 14px; height: 14px; color: var(--green-ink); flex-shrink: 0; }
+.frag:nth-child(even) svg { color: var(--terracotta); }
+@keyframes frag-in {
+  from { opacity: 0; }
+}
+@keyframes frag-bob {
+  from { translate: 0 -5px; }
+  to   { translate: 0 6px; }
+}
+@media (max-width: 860px) {
+  /* Six floating chips over a phone-width hero is clutter, and the GPU
+     is already driving a 3x display. The convergence idea survives in
+     the problem section's scrub. */
+  .hero-frags { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero h1 .w { animation: none; }
+  .hero-frags { display: none; }
+}
+
+/* Stacking inside the device column: glow behind, phone above, fragments in front. */
+.device-wrap .device, .device-wrap .device-bleed { position: relative; z-index: 1; }
+/* The pinned hub phone shows a little more screen than the standard crop. */
+@media (min-width: 861px) and (prefers-reduced-motion: no-preference) {
+  .js .hub-stage[data-pin] .device-bleed { height: min(500px, 60vh); }
+}
+
+/* ---------- 27.4 Trust strip: icons draw themselves ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .trust-item svg :is(path, rect, circle) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1s var(--ease);
+    transition-delay: calc(var(--i, 0) * 140ms + 0.15s);
+  }
+  .js .trust-item.in svg :is(path, rect, circle) { stroke-dashoffset: 0; }
+}
+
+/* ============================================================
+   27.5 Scrubbed scenes
+   Everything from here to 27.11 rides var(--p). Gated as a
+   block: no JS or reduced motion means the original reveal
+   behaviour (or a plain static render) is what remains.
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* ---------- Problem: chips fly with the scroll ---------- */
+
+  /* Supersedes the one-shot reveal for these chips: the scattered start
+     offsets in the markup are replayed continuously from scroll progress,
+     so scrolling back up scatters the mess again. */
+  .js [data-scrub] .scatter-chip {
+    --cp: clamp(0, calc((var(--p, 1) - 0.08 - var(--i, 0) * 0.025) * 3.2), 1);
+    transition: none;
+    opacity: calc(0.1 + 0.9 * var(--cp));
+    transform:
+      translate3d(calc(var(--dx, 0px) * (1 - var(--cp))), calc(var(--dy, 0px) * (1 - var(--cp))), 0)
+      rotate(calc(var(--rot, 0deg) * (1 - var(--cp))))
+      scale(calc(var(--sc, 0.92) + (1 - var(--sc, 0.92)) * var(--cp)));
+  }
+  .js [data-scrub] .resolve-card.reveal {
+    transition: none;
+    --rp: clamp(0, calc((var(--p, 1) - 0.32) * 3.4), 1);
+    opacity: var(--rp);
+    transform: translate3d(0, calc((1 - var(--rp)) * 26px), 0) scale(calc(0.97 + 0.03 * var(--rp)));
+  }
+
+  /* ---------- Portfolio: the figures count with the scroll ---------- */
+
+  .js [data-scrub] .stats.big .stat {
+    --sp: clamp(0, calc((var(--p, 1) - 0.1 - var(--i, 0) * 0.06) * 3.6), 1);
+    opacity: var(--sp);
+    transform: translate3d(calc((1 - var(--sp)) * 34px), 0, 0);
+  }
+
+  /* ---------- Tour: the film frame settles into place ---------- */
+
+  .js [data-scrub] .video-frame {
+    --vp: clamp(0, calc((var(--p, 1) - 0.05) * 2.8), 1);
+    transform: scale(calc(0.93 + 0.07 * var(--vp))) translate3d(0, calc((1 - var(--vp)) * 22px), 0);
+  }
+
+  /* ---------- Steps: the line draws through the sequence ---------- */
+
+  .js [data-scrub] .steps-line path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - clamp(0, calc((var(--p, 1) - 0.18) * 2.4), 1));
+  }
+  .js [data-scrub] .step {
+    --tp: clamp(0, calc((var(--p, 1) - 0.12 - var(--i, 0) * 0.09) * 3.4), 1);
+    opacity: var(--tp);
+    transform: translate3d(0, calc((1 - var(--tp)) * 30px), 0);
+  }
+
+  /* ---------- EOFY: the pack assembles itself ---------- */
+
+  .js [data-scrub] .eofy-pack .pack-row {
+    --lp: clamp(0, calc((var(--p, 1) - var(--d, 0.1)) * 4.2), 1);
+    opacity: var(--lp);
+    transform: translate3d(calc((1 - var(--lp)) * -22px), calc((1 - var(--lp)) * 18px), 0)
+               scale(calc(0.95 + 0.05 * var(--lp)));
+  }
+  .js [data-scrub] .eofy-pack .pack-row:nth-child(1) { --d: 0.1; }
+  .js [data-scrub] .eofy-pack .pack-row:nth-child(2) { --d: 0.16; }
+  .js [data-scrub] .eofy-pack .pack-row:nth-child(3) { --d: 0.22; }
+  .js [data-scrub] .eofy-pack .pack-row:nth-child(4) { --d: 0.28; }
+  .js [data-scrub] .eofy-pack .pack-row:nth-child(5) { --d: 0.34; }
+  .js [data-scrub] .eofy-pack .pack-formats {
+    --fp: clamp(0, calc((var(--p, 1) - 0.44) * 4.2), 1);
+    opacity: var(--fp);
+    transform: translate3d(0, calc((1 - var(--fp)) * 14px), 0);
+  }
+
+  /* The "missing" row resolves: its amber flag crossfades to the green
+     tick a beat after the row lands — the pack finishing its own audit. */
+  .js [data-scrub] .pack-row.flagged .pr-icon { position: relative; }
+  .js [data-scrub] .pack-row.flagged .pr-icon .ic-flag,
+  .js [data-scrub] .pack-row.flagged .pr-icon .ic-tick {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .js [data-scrub] .pack-row.flagged .pr-icon .ic-flag {
+    color: var(--terracotta);
+    opacity: calc(1 - clamp(0, calc((var(--p, 1) - 0.52) * 6), 1));
+  }
+  .js [data-scrub] .pack-row.flagged .pr-icon .ic-tick {
+    opacity: clamp(0, calc((var(--p, 1) - 0.52) * 6), 1);
+    transform: scale(calc(0.6 + 0.4 * clamp(0, calc((var(--p, 1) - 0.52) * 6), 1)));
+  }
+
+  /* ---------- Privacy: the glow gathers inside the phone ---------- */
+
+  .js [data-scrub] .privacy-phone::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 30px;
+    background: radial-gradient(circle at 50% 30%,
+      color-mix(in srgb, var(--green) 34%, transparent), transparent 72%);
+    opacity: clamp(0, calc((var(--p, 1) - 0.15) * 2.6), 1);
+    pointer-events: none;
+  }
+
+} /* end no-preference scrub block */
+
+/* Without the flag CSS above, the flagged row's two icons stack on top of
+   each other — outside the scrub block the tick simply wins. */
+.pack-row.flagged .pr-icon .ic-flag { display: none; }
+.pack-row.flagged .pr-icon .ic-tick { display: flex; }
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-scrub] .pack-row.flagged .pr-icon .ic-flag { display: flex; }
+}
+
+/* Face ID scan: one slow sweep down the figures when the diagram arrives,
+   run twice and done — the phone glancing at its owner, not a radar. */
+.pp-scan {
+  position: absolute;
+  left: 10px; right: 10px;
+  top: 54px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(to bottom,
+    transparent,
+    color-mix(in srgb, var(--green) 26%, transparent) 50%,
+    transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .privacy-diagram.in .pp-scan { animation: pp-scan 2.8s var(--ease-soft) 0.5s 2; }
+}
+@keyframes pp-scan {
+  0%   { opacity: 0; transform: translateY(0); }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(96px); }
+}
+
+/* ---------- 27.6 The portfolio equity bar ---------- */
+
+.equity { max-width: 420px; margin-top: 16px; }
+.eq-track {
+  height: 8px;
+  border-radius: 6px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+.eq-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--green), var(--green-ink));
+  transform-origin: left;
+  transform: scaleX(0.535);
+}
+.eq-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 2px 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.eq-caption strong { color: var(--green-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-scrub] .eq-fill {
+    transform: scaleX(calc(0.535 * clamp(0, calc((var(--p, 1) - 0.28) * 2.4), 1)));
+  }
+  .js [data-scrub] .equity .eq-caption {
+    opacity: clamp(0, calc((var(--p, 1) - 0.3) * 3), 1);
+  }
+}
+
+/* ============================================================
+   27.7 THE PINNED HUB
+   ------------------------------------------------------------
+   The page's centrepiece, and the one structure borrowed from
+   huly.io: the phone pins to the viewport while six chapters
+   scroll past it, each lighting its bullet and floating its
+   feature card over the device.
+
+   Only exists where it can work: wide viewport, motion allowed,
+   JS running. Everywhere else the same markup renders as the
+   ordinary copy/visual split it replaced.
+   ============================================================ */
+
+.hub-band { overflow: visible; }
+
+.hub-item h3 { margin-bottom: 4px; }
+.hub-item p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+.hub-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+}
+.hub-item { position: relative; padding-left: 22px; }
+.hub-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+/* The feature cards are hidden outside the pinned experience — the
+   phone capture already shows the screen itself. */
+.hub-chip { display: none; }
+
+@media (min-width: 861px) and (prefers-reduced-motion: no-preference) {
+
+  .js .hub-stage { height: 100vh; }
+  .js .hub-stage[data-pin] { height: 420vh; }
+  .js .hub-sticky {
+    position: sticky;
+    top: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 68px 0 18px;   /* clears the sticky nav */
+  }
+  /* The pinned frame has to fit a viewport, so the copy column runs
+     tighter than the free-flowing fallback it shares markup with. */
+  .js .hub-stage[data-pin] h2 { font-size: clamp(28px, 3.4vw, 38px); margin-bottom: 14px; }
+  .js .hub-stage[data-pin] .lede { margin-bottom: 18px; font-size: 16px; }
+  .js .hub-stage[data-pin] .eyebrow { margin-bottom: 12px; }
+
+  .js .hub-stage[data-pin] .hub-list { gap: 7px; }
+  .js .hub-stage[data-pin] .hub-item {
+    padding: 9px 14px 9px 32px;
+    border-radius: var(--radius-sm);
+    opacity: 0.38;
+    transition: opacity 0.45s var(--ease), background-color 0.45s var(--ease), transform 0.45s var(--ease);
+  }
+  .js .hub-stage[data-pin] .hub-item::before {
+    left: 13px;
+    top: 16px;
+    transition: background-color 0.45s var(--ease), box-shadow 0.45s var(--ease);
+  }
+  .js .hub-stage[data-pin] .hub-item p {
+    /* Grid-row collapse animates smoothly without measuring heights. */
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    transition: grid-template-rows 0.5s var(--ease), opacity 0.4s var(--ease);
+    opacity: 0;
+  }
+  .js .hub-stage[data-pin] .hub-item p > span { min-height: 0; display: block; }
+
+  /* One selector per chapter: the stage's data-step is the whole state. */
+  .js [data-step="0"] .hub-item:nth-child(1),
+  .js [data-step="1"] .hub-item:nth-child(2),
+  .js [data-step="2"] .hub-item:nth-child(3),
+  .js [data-step="3"] .hub-item:nth-child(4),
+  .js [data-step="4"] .hub-item:nth-child(5),
+  .js [data-step="5"] .hub-item:nth-child(6) {
+    opacity: 1;
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    transform: translate3d(4px, 0, 0);
+  }
+  .js [data-step="0"] .hub-item:nth-child(1)::before,
+  .js [data-step="1"] .hub-item:nth-child(2)::before,
+  .js [data-step="2"] .hub-item:nth-child(3)::before,
+  .js [data-step="3"] .hub-item:nth-child(4)::before,
+  .js [data-step="4"] .hub-item:nth-child(5)::before,
+  .js [data-step="5"] .hub-item:nth-child(6)::before {
+    background: var(--green);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 22%, transparent);
+  }
+  .js [data-step="0"] .hub-item:nth-child(1) p,
+  .js [data-step="1"] .hub-item:nth-child(2) p,
+  .js [data-step="2"] .hub-item:nth-child(3) p,
+  .js [data-step="3"] .hub-item:nth-child(4) p,
+  .js [data-step="4"] .hub-item:nth-child(5) p,
+  .js [data-step="5"] .hub-item:nth-child(6) p {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  /* Progress rail beside the list: fills with the stage. */
+  .js .hub-stage[data-pin] .hub-rail {
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+  .js .hub-stage[data-pin] .hub-rail::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    background: var(--green);
+    transform: scaleY(var(--p, 0));
+    transform-origin: top;
+  }
+  .js .hub-stage[data-pin] .hub-copy { position: relative; padding-left: 18px; }
+
+  /* The floating feature cards. All six exist; the active one rises
+     over the device's edge. */
+  .js .hub-stage[data-pin] .hub-chip {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    position: absolute;
+    z-index: 3;
+    padding: 11px 15px;
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-lift);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.92);
+    transition: opacity 0.45s var(--ease), transform 0.55s var(--ease);
+    pointer-events: none;
+  }
+  .js .hub-stage[data-pin] .hub-chip svg { width: 15px; height: 15px; color: var(--green-ink); flex-shrink: 0; }
+  .js .hub-stage[data-pin] .hub-chip small {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+  .js .hub-stage[data-pin] .hub-chip .hc-copy { line-height: 1.2; text-align: left; }
+
+  /* Alternate the cards around the device so the sequence travels. */
+  .hub-chip[data-chip="0"] { top: 12%;  right: -8%; }
+  .hub-chip[data-chip="1"] { top: 30%;  left: -14%; }
+  .hub-chip[data-chip="2"] { top: 48%;  right: -12%; }
+  .hub-chip[data-chip="3"] { top: 62%;  left: -10%; }
+  .hub-chip[data-chip="4"] { top: 76%;  right: -6%; }
+  .hub-chip[data-chip="5"] { top: 88%;  left: -6%; }
+
+  .js [data-step="0"] .hub-chip[data-chip="0"],
+  .js [data-step="1"] .hub-chip[data-chip="1"],
+  .js [data-step="2"] .hub-chip[data-chip="2"],
+  .js [data-step="3"] .hub-chip[data-chip="3"],
+  .js [data-step="4"] .hub-chip[data-chip="4"],
+  .js [data-step="5"] .hub-chip[data-chip="5"] {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  .js .hub-stage[data-pin] .hub-visual { position: relative; }
+  /* The phone leans back very slightly as the chapters advance — alive,
+     not busy.
+
+     The transform goes on .device-bleed, NOT on .device inside it. The
+     bleed box carries `overflow: hidden` to crop the phone at the
+     bottom, so rotating its child sent the phone's left and right edges
+     straight through a clip rectangle that hadn't rotated with it —
+     the bezel visibly sliced off down both sides while scrolling.
+     Rotating the crop box means the clip travels with the content. */
+  .js .hub-stage[data-pin] .device-bleed {
+    transform: translate3d(0, calc(var(--p, 0) * -14px), 0) rotate(calc(-1deg + var(--p, 0) * 2deg));
+    transition: none;
+  }
+  .js .hub-stage[data-pin] .device { transform: none; transition: none; }
+}
+
+/* Short laptop windows: the pinned frame trades the lede for fit. */
+@media (min-width: 861px) and (max-height: 700px) and (prefers-reduced-motion: no-preference) {
+  .js .hub-stage[data-pin] .lede { display: none; }
+  .js .hub-stage[data-pin] .device-bleed { height: min(430px, 56vh); }
+  .js .hub-sticky { padding-top: 60px; }
+}
+
+/* ---------- 27.8 Steps connector ---------- */
+
+.steps-wrap { position: relative; }
+.steps-line {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 68px;
+  width: 92%;
+  height: 90px;
+  z-index: 0;
+  pointer-events: none;
+  color: var(--green);
+  opacity: 0.55;
+}
+.steps { position: relative; z-index: 1; }
+@media (max-width: 860px) {
+  .steps-line { display: none; }
+}
+
+/* ---------- 27.9 EOFY sheen ---------- */
+
+/* One pass of light across the export banner when it arrives — the same
+   single-sweep language as the primary button, so the page has one idea
+   about what light means: something worth pressing. */
+.detail-shot { position: relative; }
+.detail-shot::after {
+  content: "";
+  position: absolute;
+  top: -30%; bottom: -30%;
+  left: -30%;
+  width: 26%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  transform: translate3d(-160%, 0, 0) skewX(-14deg);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .detail-shot.in::after { animation: shot-sheen 1.4s var(--ease-soft) 0.5s both; }
+}
+@keyframes shot-sheen {
+  to { transform: translate3d(680%, 0, 0) skewX(-14deg); }
+}
+
+/* ---------- 27.10 Australian: the year flips ---------- */
+
+.au-flip .flip-box {
+  display: inline-grid;
+  text-align: left;
+}
+.au-flip .flip-box > span {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  transition: transform 0.65s var(--ease), opacity 0.5s var(--ease);
+  transition-delay: 0.7s;
+}
+.au-flip .flip-old { color: var(--muted); text-decoration: line-through; }
+.au-flip .flip-new { font-weight: 600; color: var(--green-ink); }
+
+.js .au-flip .flip-old { transform: rotateX(0); opacity: 1; }
+.js .au-flip .flip-new { transform: rotateX(-92deg); opacity: 0; }
+.js .au-flip.in .flip-old { transform: rotateX(92deg); opacity: 0; }
+.js .au-flip.in .flip-new { transform: rotateX(0); opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .js .au-flip .flip-old { display: none; }
+  .js .au-flip .flip-new { transform: none; opacity: 1; }
+}
+/* Without JS the flip never fires; show the answer, not the joke. */
+html:not(.js) .au-flip .flip-old { display: none; }
+
+.au-chip { transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease); }
+@media (hover: hover) {
+  .au-chip:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+}
+
+/* ---------- 27.11 Pricing: light, not noise ---------- */
+
+.price-card { transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease); }
+@media (hover: hover) {
+  .price-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lift); }
+}
+/* The featured card sits in its own pool of brand light. */
+.price-card.featured { position: relative; }
+.price-card.featured::before {
+  content: "";
+  position: absolute;
+  inset: -18px;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%,
+    color-mix(in srgb, var(--green) 26%, transparent), transparent 70%);
+  filter: blur(24px);
+  animation: featured-breathe 6s var(--ease-soft) infinite alternate;
+}
+@keyframes featured-breathe {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .price-card.featured::before { animation: none; }
+  .price-card { transition: none; }
+}
+
+/* ---------- 27.12 Final CTA ---------- */
+
+.final img.mark { animation: mark-float 5.5s var(--ease-soft) infinite alternate; }
+@keyframes mark-float {
+  from { transform: translate3d(0, -4px, 0); }
+  to   { transform: translate3d(0, 5px, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .final img.mark { animation: none; }
+}
+
+/* ============================================================
+   28. LASER FLOW + GLOWING EDGES
+   ------------------------------------------------------------
+   The hero's shaft of light as a real volumetric shader (see
+   js/laser-flow.js), and conic light running the edges of the
+   page's key surfaces. Both stay inside the brand: the laser
+   and every edge are the app's green, with the terracotta only
+   as a faint counter-note where the two already pair.
+   ============================================================ */
+
+.molten-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* The field reads as page atmosphere, not a poster: quieter over the
+     light theme, fuller against dark glass. Section edges dissolve the
+     same way the liquid fields do. */
+  opacity: 0.5;
+  /* Fades in at the top as well as out at the bottom. Starting at full
+     strength put a visible horizontal seam wherever one section's field
+     met the next one's ground. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  .molten-canvas { opacity: 0.8; }
+}
+/* The closing CTA carries a waitlist form, so the field runs quieter
+   there than in the hero — atmosphere behind an input, not competition
+   with it. Fades in at the top so the section arrives rather than cuts. */
+.final .molten-canvas {
+  opacity: 0.34;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 88%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 88%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  .final .molten-canvas { opacity: 0.5; }
+}
+/* The shader replaces the CSS beam while it's alive; a lost context
+   removes .has-molten and the CSS beam returns. */
+.has-molten .hero-glow .beam,
+.has-molten .hero-glow .bloom { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .molten-canvas { display: none; }
+}
+
+/* ---------- Glowing edges ---------- */
+
+/* A band of brand light running the border of a surface. Registered as
+   a real <angle> so the rotation animates smoothly; where @property is
+   unsupported the ring holds still, which is a perfectly good edge.
+
+   The ring is drawn INSIDE the element: a padded layer masked down to
+   its border band. That survives `overflow: hidden` (the film frame
+   and the EOFY crop both clip their children), needs no negative
+   z-index games, and sits above the content only along a 2px edge. */
+@property --ga {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.glow-edge { position: relative; }
+.glow-edge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--ga),
+    color-mix(in srgb, var(--green) 20%, transparent) 0turn,
+    var(--green) 0.09turn,
+    color-mix(in srgb, var(--green) 20%, transparent) 0.2turn,
+    color-mix(in srgb, var(--green) 20%, transparent) 0.47turn,
+    color-mix(in srgb, var(--terracotta) 70%, var(--green)) 0.59turn,
+    color-mix(in srgb, var(--green) 20%, transparent) 0.7turn,
+    color-mix(in srgb, var(--green) 20%, transparent) 1turn
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: edge-rotate 7s linear infinite;
+}
+/* The halo: the bright arc again, blurred wide, behind the element.
+   Only visible where the surface isn't clipping its children — the
+   device and the price card — and harmlessly invisible elsewhere.
+   detail-shot is excluded outright: its ::after is the sheen sweep
+   owned by section 27.9. */
+.glow-edge:not(.detail-shot)::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--ga),
+    transparent 0turn,
+    color-mix(in srgb, var(--green) 60%, transparent) 0.09turn,
+    transparent 0.24turn,
+    transparent 0.5turn,
+    color-mix(in srgb, var(--green) 34%, transparent) 0.62turn,
+    transparent 0.78turn
+  );
+  filter: blur(15px);
+  opacity: 0.85;
+  pointer-events: none;
+  animation: edge-rotate 7s linear infinite;
+}
+@keyframes edge-rotate {
+  to { --ga: 360deg; }
+}
+
+/* The hero device: the ring hugs the bezel, the halo runs wider so it
+   reads against the laser's bloom instead of vanishing into it. */
+.device.glow-edge::before { padding: 2.5px; }
+.device.glow-edge:not(.detail-shot)::after { inset: -10px; }
+
+/* The featured price card trades its static breathing pool for the
+   travelling edge. Spelled out at higher specificity because the pool
+   rule in section 27 also owns this pseudo-element. */
+.price-card.featured.glow-edge::before {
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  filter: none;
+  background: conic-gradient(
+    from var(--ga),
+    color-mix(in srgb, var(--green) 24%, transparent) 0turn,
+    var(--green) 0.09turn,
+    color-mix(in srgb, var(--green) 24%, transparent) 0.2turn,
+    color-mix(in srgb, var(--green) 24%, transparent) 0.47turn,
+    color-mix(in srgb, var(--green) 55%, transparent) 0.59turn,
+    color-mix(in srgb, var(--green) 24%, transparent) 0.7turn,
+    color-mix(in srgb, var(--green) 24%, transparent) 1turn
+  );
+  animation: edge-rotate 9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-edge::before, .glow-edge::after { animation: none; }
+}
+
+/* ---------- 28.b Aurora over the dark chapter ---------- */
+
+/* Curtains of brand light hanging from the top of the privacy section
+   (see js/aurora-flow.js). Sits above the section's liquid field and
+   below its content; the mask dissolves the canvas's lower edge so the
+   sky ends as weather, not as a rectangle. */
+.aurora-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.85;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora-canvas { display: none; }
+}
+
+/* ---------- 28.c Shiny text ---------- */
+
+/* react-bits' ShinyText, ported to pure CSS: the component animates
+   background-position across a text-clipped gradient (150% -> -50%),
+   and its `motion` dependency was doing nothing a keyframe can't.
+   The sweep occupies the first 40% of the cycle; the rest is the
+   between-cycles delay, held with the shine parked off-screen — at
+   which point the text sits at its base colour, which is also the
+   whole story under reduced motion or where background-clip:text is
+   unsupported (the @supports gate keeps those browsers on plain
+   colour rather than invisible text). */
+.shiny-text { display: inline-block; }
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .shiny-text {
+    --st-base: #b2b2b2;
+    --st-shine: #009161;
+    background-image: linear-gradient(
+      95deg,
+      var(--st-base) 0%,
+      var(--st-base) 35%,
+      var(--st-shine) 50%,
+      var(--st-base) 65%,
+      var(--st-base) 100%
+    );
+    background-size: 200% auto;
+    background-position: 150% center;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: shiny-sweep 7s linear 1.2s infinite;
+  }
+}
+@keyframes shiny-sweep {
+  0%   { background-position: 150% center; }
+  40%  { background-position: -50% center; }
+  100% { background-position: -50% center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shiny-text { animation: none; }
+}
+
+/* Where it's worn. The hero's accent word stays brand green with a pale
+   sweep; PREMIUM takes the metallic grey-with-green-shine from the
+   spec's own example; the dark chapter's headline catches aurora light. */
+.hero h1 .accent.shiny-text {
+  --st-base: var(--green-ink);
+  --st-shine: #9DEDC2;
+  animation-duration: 6s;
+}
+.price-name .shiny-text {
+  --st-base: #b2b2b2;
+  --st-shine: #009161;
+  animation-duration: 5s;
+}
+.privacy h2 .shiny-text {
+  --st-base: #F5F5F7;
+  --st-shine: #7CFF67;
+}
+
+/* ---------- 28.d Premium tile: turned-up glow ---------- */
+
+/* The pool of light under the featured card, back and stronger, on top
+   of the travelling edge: a static close glow on the card itself, a
+   wider breathing halo behind it, and brighter arcs in the ring. */
+.price-card.featured.glow-edge {
+  box-shadow:
+    var(--shadow-lift),
+    0 0 18px -6px color-mix(in srgb, var(--green) 32%, transparent),
+    0 0 52px -12px color-mix(in srgb, var(--green) 38%, transparent),
+    0 0 110px -28px color-mix(in srgb, var(--green) 45%, transparent);
+}
+.price-card.featured.glow-edge::before {
+  padding: 2px;
+  background: conic-gradient(
+    from var(--ga),
+    color-mix(in srgb, var(--green) 38%, transparent) 0turn,
+    var(--green) 0.09turn,
+    color-mix(in srgb, var(--green) 38%, transparent) 0.22turn,
+    color-mix(in srgb, var(--green) 38%, transparent) 0.45turn,
+    var(--green) 0.59turn,
+    color-mix(in srgb, var(--green) 38%, transparent) 0.72turn,
+    color-mix(in srgb, var(--green) 38%, transparent) 1turn
+  );
+}
+.price-card.featured.glow-edge:not(.detail-shot)::after {
+  inset: -26px;
+  filter: blur(42px);
+  opacity: 0.95;
+  background: conic-gradient(
+    from var(--ga),
+    color-mix(in srgb, var(--green) 30%, transparent) 0turn,
+    color-mix(in srgb, var(--green) 80%, transparent) 0.09turn,
+    color-mix(in srgb, var(--green) 30%, transparent) 0.26turn,
+    color-mix(in srgb, var(--green) 30%, transparent) 0.5turn,
+    color-mix(in srgb, var(--green) 62%, transparent) 0.62turn,
+    color-mix(in srgb, var(--green) 30%, transparent) 0.8turn,
+    color-mix(in srgb, var(--green) 30%, transparent) 1turn
+  );
+}
+
+/* ---------- 28.e Light pillar behind the pinned hub ---------- */
+
+/* Hosted on the sticky frame rather than the 420vh stage, so the pillar
+   fills the viewport the visitor is actually looking at and travels with
+   the pin instead of scrolling past in a thin slice. */
+.hub-sticky { position: relative; }
+.pillar-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  .pillar-canvas { opacity: 0.9; }
+}
+/* Content sits above the light. */
+.hub-sticky > .container { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .pillar-canvas { display: none; }
+}
+
+/* ---------- 28.f Side rays across the getting-started band ---------- */
+
+/* Light raking in from the top-right corner, over the section's liquid
+   field and under its content. The band already carries three bright
+   captures, so the rays run quieter here than the hub's pillar does. */
+.rays-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 74%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 74%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  .rays-canvas { opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rays-canvas { display: none; }
+}
+
+/* ---------- 28.g Glow pools on the page's key tiles ---------- */
+
+/* The Premium card's pool of brand light, generalised. Delivered as a
+   box-shadow rather than the ::after halo the pricing card uses, because
+   every surface below clips its own children (`overflow: hidden` on the
+   film frame and the EOFY crop) — a halo child would be cut off at the
+   very edge it needs to escape. A box-shadow is painted outside the
+   border box and ignores the element's own overflow entirely. */
+/* Three concentric shadows, not one. A single box-shadow falls off over
+   its blur radius and then simply stops, which is what made these read as
+   a hard-edged rectangle of light rather than a bloom. Stacking a tight,
+   a mid and a very wide shadow with decreasing alpha approximates a much
+   longer falloff, so the glow dissolves into the page instead of ending
+   on a line. --gp-a scales the whole stack, so the breathe animation and
+   the dark-theme lift are each a single number rather than three. */
+.glow-pool {
+  --gp-a: 1;
+  box-shadow:
+    var(--shadow-lift),
+    0 0 16px -6px color-mix(in srgb, var(--green) calc(30% * var(--gp-a)), transparent),
+    0 0 46px -12px color-mix(in srgb, var(--green) calc(34% * var(--gp-a)), transparent),
+    0 0 96px -26px color-mix(in srgb, var(--green) calc(40% * var(--gp-a)), transparent);
+  animation: pool-breathe 6.5s var(--ease-soft) infinite alternate;
+}
+@keyframes pool-breathe {
+  from { --gp-a: 0.72; }
+  to   { --gp-a: 1.15; }
+}
+/* Glow reads harder against dark grounds, so the light theme runs cooler. */
+@media (prefers-color-scheme: dark) {
+  @keyframes pool-breathe {
+    from { --gp-a: 1; }
+    to   { --gp-a: 1.55; }
+  }
+}
+/* --gp-a has to be a registered property or it can't be interpolated —
+   an unregistered custom property animates as a discrete swap, which
+   would make the bloom snap between two states instead of breathing. */
+@property --gp-a {
+  syntax: "<number>";
+  initial-value: 1;
+  inherits: false;
+}
+/* The three step crops share one light, at a third of the strength — a
+   row of tiles each shouting as loud as the film would be noise. */
+.glow-pool.soft {
+  animation-duration: 8s;
+  animation-delay: calc(var(--i, 0) * -2.6s);
+}
+.step-shot.glow-pool.soft {
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 16px 34px -22px rgba(0, 0, 0, 0.4),
+    0 0 20px -8px color-mix(in srgb, var(--green) calc(22% * var(--gp-a)), transparent),
+    0 0 52px -18px color-mix(in srgb, var(--green) calc(30% * var(--gp-a)), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-pool { animation: none; }
+}
+
+/* ---------- 28.h Shiny section headings ---------- */
+
+/* The shine applied to the page's white/ink headings. Unlike the PREMIUM
+   label — which takes the spec's own metallic grey — a heading must keep
+   its own colour as the base, or every h2 on the page drops to #b2b2b2
+   grey and light mode loses its contrast outright. So the base is the
+   ink token and only the travelling highlight is brand: a green gleam
+   through near-black in light, a bright leaf gleam through white in dark.
+   No wrapper span needed — background-clip:text clips to the glyphs of a
+   block element just as happily as an inline one. */
+.shiny-head {
+  --st-base: var(--ink);
+  --st-shine: var(--green);
+  animation-duration: 8s;
+  /* MUST override .shiny-text's inline-block. The eyebrow above every
+     heading is an inline-flex <p>, so it sits on the text baseline rather
+     than owning a line — a block h2 was what pushed the heading onto the
+     next line. Turning these headings inline-block dropped them back up
+     beside their eyebrow ("• TAX TIME EOFY in one tap."). Block restores
+     the intended stack, and background-clip:text clips to the glyphs of a
+     block element exactly as well. */
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  .shiny-head { --st-shine: #7CFF67; }
+}
+/* Inside the dark chapter the tokens are already inverted, and its own
+   headline keeps the treatment set in 28.c. */
+.privacy .shiny-head { --st-shine: #7CFF67; }
+
+/* ============================================================
+   29. THE DOCUMENT FOLDER
+   ------------------------------------------------------------
+   react-bits' Folder, rebuilt as a plain <button>. The original
+   is a React component holding one boolean and three mouse
+   offsets — no library, nothing a button and a class can't do —
+   so the port drops React and gains keyboard support for free:
+   the whole thing is a real button, so Enter and Space work
+   without the role/tabindex the original has to hand-roll.
+
+   Sits in the EOFY section because that is the one place on the
+   page whose subject is paperwork being gathered up. The three
+   papers name document types the app's Documents screen really
+   files, so hovering teaches something rather than just moving.
+
+   Geometry note: every paper transform below composes
+   translate(-50%, …) because the papers are centred with
+   `left: 50%`. Dropping that from any one state makes it jump
+   half its own width sideways mid-animation.
+   ============================================================ */
+
+.doc-folder-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 40px;
+}
+
+.doc-folder {
+  --folder: var(--green);
+  --folder-back: color-mix(in srgb, var(--green) 88%, #000);
+  --paper-1: color-mix(in srgb, var(--surface) 90%, #000);
+  --paper-2: color-mix(in srgb, var(--surface) 96%, #000);
+  --paper-3: var(--surface);
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  padding: 26px 18px 10px;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease);
+}
+
+.folder-back {
+  position: relative;
+  display: block;
+  width: 124px;
+  height: 98px;
+  background: var(--folder-back);
+  border-radius: 0 10px 10px 10px;
+}
+/* The tab along the top edge. */
+.folder-back::after {
+  content: "";
+  position: absolute;
+  bottom: 98%;
+  left: 0;
+  width: 38px;
+  height: 11px;
+  background: var(--folder-back);
+  border-radius: 5px 5px 0 0;
+}
+
+.paper {
+  position: absolute;
+  z-index: 2;
+  bottom: 10%;
+  left: 50%;
+  width: 70%;
+  height: 80%;
+  background: var(--paper-1);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: translate(-50%, 10%);
+  transition: transform 0.34s var(--ease), box-shadow 0.34s var(--ease);
+  overflow: hidden;
+}
+.paper-2 { background: var(--paper-2); width: 80%; height: 70%; }
+.paper-3 { background: var(--paper-3); width: 90%; height: 60%; }
+
+/* Labels only earn their space once the papers are fanned out; at rest
+   they are stacked inside a 100px folder and would be illegible mush. */
+.paper-label {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 4px 6px 5px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+}
+/* Ruled lines behind the label, so a closed paper still reads as paper. */
+.paper::before {
+  content: "";
+  position: absolute;
+  inset: 18% 16% auto;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--line);
+  box-shadow: 0 5px 0 var(--line), 0 10px 0 var(--line);
+}
+
+.folder-front {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  background: var(--folder);
+  border-radius: 5px 10px 10px 10px;
+  transform-origin: bottom;
+  transition: transform 0.34s var(--ease);
+}
+.folder-front.right { border-radius: 5px 10px 10px 10px; }
+
+.doc-folder-caption {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
+  max-width: 28ch;
+}
+
+/* ---------- Hover: the lid opens and the papers peek ---------- */
+
+@media (hover: hover) {
+  .doc-folder:hover { transform: translateY(-8px); }
+  .doc-folder:hover .paper { transform: translate(-50%, 0%); }
+  .doc-folder:hover .folder-front { transform: skew(15deg) scaleY(0.6); }
+  .doc-folder:hover .folder-front.right { transform: skew(-15deg) scaleY(0.6); }
+}
+
+/* ---------- Open: the papers fan out and name themselves ---------- */
+
+.doc-folder[aria-expanded="true"] { transform: translateY(-8px); }
+.doc-folder[aria-expanded="true"] .folder-front { transform: skew(15deg) scaleY(0.6); }
+.doc-folder[aria-expanded="true"] .folder-front.right { transform: skew(-15deg) scaleY(0.6); }
+
+/* --mx/--my are the pointer-follow offsets JS writes per paper. They
+   default to 0, so the fan is correct before the pointer ever moves and
+   on touch, where there is no pointer to follow. */
+.doc-folder[aria-expanded="true"] .paper-1 {
+  transform: translate(calc(-118% + var(--mx, 0px)), calc(-64% + var(--my, 0px))) rotate(-15deg);
+}
+.doc-folder[aria-expanded="true"] .paper-2 {
+  transform: translate(calc(8% + var(--mx, 0px)), calc(-64% + var(--my, 0px))) rotate(15deg);
+  height: 80%;
+}
+.doc-folder[aria-expanded="true"] .paper-3 {
+  transform: translate(calc(-50% + var(--mx, 0px)), calc(-96% + var(--my, 0px))) rotate(5deg);
+  height: 80%;
+}
+.doc-folder[aria-expanded="true"] .paper {
+  box-shadow: var(--shadow-lift);
+}
+.doc-folder[aria-expanded="true"] .paper-label { opacity: 1; }
+
+.doc-folder:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+
+/* Phones get the fanned state as the resting state — there is no hover
+   to reveal it, and a folder that only ever reads as a closed rectangle
+   is a graphic, not an interaction. Tapping still toggles it shut.
+
+   Because it arrives fanned, the papers are already translated up out of
+   the folder box, which on a stacked layout put them into the gap above
+   and crowded the PDF/CSV chips. The top padding is that headroom. */
+@media (max-width: 860px) {
+  .doc-folder-wrap { margin-bottom: 32px; padding-top: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doc-folder,
+  .doc-folder .paper,
+  .doc-folder .folder-front,
+  .doc-folder .paper-label { transition: none; }
 }

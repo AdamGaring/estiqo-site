@@ -100,7 +100,7 @@
       "name": "So what does Premium actually unlock?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The end-of-year work and the analysis on top of it: EOFY packs for your accountant, the depreciation schedule, the CGT sale worksheet, cash flow forecasts, value over time, the equity and borrowing snapshot, portfolio analytics, and the due diligence checklists and calculators. In other words, the parts you reach for once a year or when you're deciding something — not the parts you use every week."
+        "text": "The end-of-year work and the analysis on top of it: EOFY packs for your accountant, the depreciation schedule, the CGT sale worksheet, cash flow forecasts, value over time, the equity and borrowing snapshot, portfolio analytics, the What if? simulator, improvement projects, and the due diligence checklists and calculators. In other words, the parts you reach for once a year or when you're deciding something — not the parts you use every week."
       }
     },
     {
@@ -181,9 +181,10 @@
      to compete with it. `data-liquid` is what estiqo.js observes to
      start and stop the animation with visibility.
      ============================================================ -->
-<section class="hero" data-liquid>
+<section class="hero" data-liquid data-hero data-molten>
   <div class="liquid" aria-hidden="true">
     <div class="liquid-inner">
+      <span class="aurora"></span>
       <span class="blob green blob-1"></span>
       <span class="blob terra blob-2"></span>
       <span class="blob green blob-3"></span>
@@ -193,7 +194,7 @@
   <div class="hero-grid">
     <div>
       <p class="eyebrow reveal">Coming soon for iPhone</p>
-      <h1 class="reveal" style="--i:1">Your property<br>portfolio <span class="accent">hub</span>.</h1>
+      <h1><span class="w" style="--wi:0">Your</span> <span class="w" style="--wi:1">property</span><br><span class="w" style="--wi:2">portfolio</span> <span class="w" style="--wi:3"><span class="accent shiny-text">hub</span>.</span></h1>
       <p class="lede reveal" style="--i:2">Every number, document, contact and key date for your investment properties — in one beautiful, private hub.</p>
 
       <div class="cta-row reveal" style="--i:3">
@@ -208,7 +209,59 @@
     </div>
 
     <div class="device-wrap reveal" style="--i:2">
-      <div class="device">
+      <!-- The glow: Huly's light shaft translated into daylight — a soft
+           column of brand green behind the device with a bloom pooled at
+           its base. Ambient only; superseded by the molten-metal shader
+           where WebGL2 is available (js/molten-flow.js adds .has-molten). -->
+      <div class="hero-glow" aria-hidden="true">
+        <span class="beam"></span>
+        <span class="bloom"></span>
+      </div>
+
+      <!-- The six places a portfolio currently lives, floating in front of
+           the glow. The engine writes --hp as the visitor scrolls and they
+           converge into the device — the page's thesis in one movement.
+           Labels mirror the problem section's chips exactly. -->
+      <!-- Six real features, converging into the device as the visitor
+           scrolls: everything the app actually holds, gathering into one
+           hub. Names and grouping are taken from the app's own section
+           headers (RootView.swift / PropertyDetailView.swift), so a chip
+           can never promise something the product doesn't ship.
+
+           These were once the six PLACES a portfolio currently lives —
+           Spreadsheet, Emails, Bank app and so on. That set still runs in
+           the problem section below, where "where your stuff lives today"
+           is the argument. In the hero it read as a feature list, and
+           "Bank app" in particular implied bank feeds: Estiqo has no
+           account, no server and no bank connection at all. -->
+      <div class="hero-frags" aria-hidden="true">
+        <span class="frag" style="--fi:0; top:5%; left:-9%; --tx:120px; --ty:150px; --fr:-8deg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Cash flow
+        </span>
+        <span class="frag" style="--fi:1; top:1%; right:-5%; --tx:-110px; --ty:165px; --fr:7deg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+          Key dates
+        </span>
+        <span class="frag" style="--fi:2; top:40%; left:-17%; --tx:155px; --ty:25px; --fr:5deg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+          Documents
+        </span>
+        <span class="frag" style="--fi:3; top:47%; right:-13%; --tx:-145px; --ty:15px; --fr:-6deg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+          Leases &amp; loans
+        </span>
+        <span class="frag" style="--fi:4; top:80%; left:-7%; --tx:125px; --ty:-125px; --fr:9deg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.4 2.1L8 9.6a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.4c.8.3 1.7.5 2.6.6a2 2 0 011.7 2z"/></svg>
+          Contacts
+        </span>
+        <span class="frag" style="--fi:5; top:86%; right:-3%; --tx:-120px; --ty:-140px; --fr:-7deg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+          Photos
+        </span>
+      </div>
+
+      <div class="device glow-edge">
         <div class="device-screen">
           <img src="img/portfolio-full.jpg" width="598" height="1300" fetchpriority="high"
                alt="Estiqo's Portfolio screen: two investment properties with photos, showing $1.44M estimated value, $670K total debt and +$536 a month cash flow.">
@@ -220,34 +273,34 @@
 
 <section class="trust">
   <div class="trust-inner">
-    <div class="trust-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z"/></svg>
+    <div class="trust-item reveal" style="--i:0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path pathLength="1" d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z"/></svg>
       Nothing leaves your iPhone
     </div>
-    <div class="trust-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+    <div class="trust-item reveal" style="--i:1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path pathLength="1" d="M20 6L9 17l-5-5"/></svg>
       No account, no login
     </div>
-    <div class="trust-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    <div class="trust-item reveal" style="--i:2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect pathLength="1" x="3" y="11" width="18" height="10" rx="2"/><path pathLength="1" d="M7 11V7a5 5 0 0110 0v4"/></svg>
       Face ID app lock
     </div>
-    <div class="trust-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    <div class="trust-item reveal" style="--i:3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle pathLength="1" cx="12" cy="12" r="9"/><path pathLength="1" d="M12 7v5l3 3"/></svg>
       Built for the Australian financial year
     </div>
   </div>
 </section>
 
 <!-- ============================================================
-     THE PROBLEM → ONE PLACE
+     WHAT IT HOLDS → ONE PLACE
      The page's one genuinely memorable transition. Six chips are
      laid out by the grid in their final positions and merely start
      life offset and rotated, so the whole effect is six composited
      transforms settling — no layout is animated, and with motion
      reduced they simply render tidy from the outset.
      ============================================================ -->
-<section class="band tight" data-liquid>
+<section class="band tight" data-liquid data-scrub>
   <div class="liquid" aria-hidden="true">
     <div class="liquid-inner">
       <span class="blob terra blob-1"></span>
@@ -258,36 +311,36 @@
   <div class="container">
     <div class="split">
       <div class="split-copy">
-        <p class="eyebrow reveal">The problem</p>
-        <h2 class="reveal" style="--i:1">Your properties shouldn't live across a dozen different places.</h2>
-        <p class="lede reveal" style="--i:2">A spreadsheet here. A PDF there. A receipt in your camera roll and a rates notice somewhere in your inbox. Nothing's lost, exactly — it's just never in one place when you actually need it.</p>
+        <p class="eyebrow reveal">What it holds</p>
+        <h2 class="reveal shiny-text shiny-head" style="--i:1">Every record a property generates, in one hub.</h2>
+        <p class="lede reveal" style="--i:2">Cash flow, key dates, documents, leases, loans, contacts and photos — each one filed against the property it belongs to, and every one of them free, for as many properties as you own.</p>
       </div>
 
       <div class="split-visual">
         <div class="scatter-grid">
           <div class="scatter-chip" style="--i:0; --dx:-38px; --dy:-30px; --rot:-7deg">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
-            Spreadsheet
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            Cash flow
           </div>
           <div class="scatter-chip" style="--i:1; --dx:26px; --dy:-44px; --rot:5deg">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-            Emails
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+            Key dates
           </div>
           <div class="scatter-chip" style="--i:2; --dx:44px; --dy:-16px; --rot:8deg">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>
-            Receipts
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+            Documents
           </div>
           <div class="scatter-chip" style="--i:3; --dx:-46px; --dy:34px; --rot:6deg">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg>
-            Bank app
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+            Leases &amp; loans
           </div>
           <div class="scatter-chip" style="--i:4; --dx:10px; --dy:48px; --rot:-6deg">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
-            Agent statements
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.4 2.1L8 9.6a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.4c.8.3 1.7.5 2.6.6a2 2 0 011.7 2z"/></svg>
+            Contacts
           </div>
           <div class="scatter-chip" style="--i:5; --dx:48px; --dy:26px; --rot:9deg">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
-            Camera roll
+            Photos
           </div>
         </div>
 
@@ -295,7 +348,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg>
         </div>
 
-        <div class="resolve-card reveal" style="--i:7">
+        <div class="resolve-card glow-pool reveal" style="--i:7">
           <img src="img/icon.png" width="46" height="46" alt="">
           <div>
             <h3>One hub, on your iPhone</h3>
@@ -311,9 +364,9 @@
      `autoplay` in the markup a browser fetches the whole 3.1MB file on
      page load regardless of preload, so this is held back until the
      section is roughly a screen away. See estiqo.js. -->
-<section class="band tight" id="tour">
+<section class="band tight" id="tour" data-scrub>
   <div class="container">
-    <div class="video-frame reveal">
+    <div class="video-frame glow-edge glow-pool reveal">
       <video
         muted loop playsinline
         preload="none"
@@ -332,7 +385,7 @@
      copy can never drift from the product the way invented sample
      data does.
      ============================================================ -->
-<section class="band" data-liquid>
+<section class="band" data-liquid data-scrub>
   <div class="liquid" aria-hidden="true">
     <div class="liquid-inner">
       <span class="blob green blob-1"></span>
@@ -344,7 +397,7 @@
     <div class="split">
       <div class="split-copy">
         <p class="eyebrow reveal">The portfolio</p>
-        <h2 class="reveal" style="--i:1">See the whole portfolio at a glance.</h2>
+        <h2 class="reveal shiny-text shiny-head" style="--i:1">See the whole portfolio at a glance.</h2>
         <p class="lede reveal" style="--i:2">Total value, what you still owe, and what the whole portfolio actually returns each month. One screen, every property, no spreadsheet to update first.</p>
       </div>
 
@@ -356,68 +409,121 @@
         <dl class="stats big">
           <div class="stat reveal">
             <dt>Est. value</dt>
-            <dd>$1.44M</dd>
+            <dd><span data-count="1.44" data-pre="$" data-post="M" data-dp="2">$1.44M</span></dd>
           </div>
           <div class="stat reveal" style="--i:1">
             <dt>Total debt</dt>
-            <dd>$670K</dd>
+            <dd><span data-count="670" data-pre="$" data-post="K">$670K</span></dd>
           </div>
           <div class="stat reveal" style="--i:2">
             <dt>Cash flow</dt>
-            <dd class="pos">+$536<small>/mo</small></dd>
+            <dd class="pos"><span data-count="536" data-pre="+$">+$536</span><small>/mo</small></dd>
           </div>
         </dl>
+
+        <!-- $1.44M less $670K — arithmetic on the two figures above, not a
+             new claim. The bar fills with the scroll: the single clearest
+             picture of what the app is for. -->
+        <div class="equity reveal" style="--i:3" aria-label="Equity: $770K of the $1.44M value">
+          <div class="eq-track"><div class="eq-fill"></div></div>
+          <p class="eq-caption"><strong>Equity $770K</strong><span>Debt $670K</span></p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================
-     EVERY PROPERTY
+     EVERY PROPERTY — the pinned hub.
+     The one structure deliberately borrowed from huly.io: on a
+     wide screen with motion allowed, the phone pins to the
+     viewport while the six chapters scroll past it, each lighting
+     its bullet and floating its feature card over the device.
+     Everywhere else (phones, reduced motion, no JS) the same
+     markup renders as the ordinary copy/visual split it replaced.
+     No liquid field here: the pin needs overflow:visible, and the
+     sticky phone is the section's whole visual anyway.
      ============================================================ -->
-<section class="band" data-liquid>
-  <div class="liquid" aria-hidden="true">
-    <div class="liquid-inner">
-      <span class="blob terra blob-1"></span>
-      <span class="blob green blob-2"></span>
-    </div>
-  </div>
+<section class="band hub-band" id="hub">
+  <div class="hub-stage" data-pin data-step="0">
+    <div class="hub-sticky" data-pillar>
+      <div class="container">
+        <div class="split reverse hub-grid">
+          <div class="split-copy hub-copy">
+            <span class="hub-rail" aria-hidden="true"></span>
+            <p class="eyebrow reveal">Every property</p>
+            <h2 class="reveal shiny-text shiny-head" style="--i:1">Each property gets its own hub.</h2>
+            <p class="lede reveal" style="--i:2">Open a property and it's already organised — the loan, the lease, the people, the paperwork, and what's coming up next.</p>
 
-  <div class="container">
-    <div class="split reverse">
-      <div class="split-copy">
-        <p class="eyebrow reveal">Every property</p>
-        <h2 class="reveal" style="--i:1">Each property gets its own hub.</h2>
-        <p class="lede reveal" style="--i:2">Open a property and it's already organised — the loan, the lease, the people, the paperwork, and what's coming up next.</p>
+            <ol class="hub-list reveal" style="--i:3">
+              <li class="hub-item">
+                <h3>Cash flow</h3>
+                <p><span>Rent and repayments feed in from the lease and loan you've already entered.</span></p>
+              </li>
+              <li class="hub-item">
+                <h3>Documents &amp; receipts</h3>
+                <p><span>Snap a photo or import a file, filed to the right property.</span></p>
+              </li>
+              <li class="hub-item">
+                <h3>Key dates</h3>
+                <p><span>Lease renewals, fixed-rate expiry, insurance and rates, with reminders.</span></p>
+              </li>
+              <li class="hub-item">
+                <h3>Contacts</h3>
+                <p><span>Property manager, tenants and tradies, one tap from a call.</span></p>
+              </li>
+              <li class="hub-item">
+                <h3>Leases &amp; loans</h3>
+                <p><span>Every tenancy and every loan, with the full history as things change.</span></p>
+              </li>
+              <li class="hub-item">
+                <h3>Photos</h3>
+                <p><span>Up to 30 per property, swipeable like a real estate listing.</span></p>
+              </li>
+            </ol>
+          </div>
 
-        <ul class="ticks reveal" style="--i:3">
-          <li><strong>Cash flow</strong> <span>— rent and repayments feed in from the lease and loan you've already entered.</span></li>
-          <li><strong>Documents &amp; receipts</strong> <span>— snap a photo or import a file, filed to the right property.</span></li>
-          <li><strong>Key dates</strong> <span>— lease renewals, fixed-rate expiry, insurance and rates, with reminders.</span></li>
-          <li><strong>Contacts</strong> <span>— property manager, tenants and tradies, one tap from a call.</span></li>
-          <li><strong>Leases &amp; loans</strong> <span>— every tenancy and every loan, with the full history as things change.</span></li>
-          <li><strong>Photos</strong> <span>— up to 30 per property, swipeable like a real estate listing.</span></li>
-        </ul>
-      </div>
-
-      <!-- Deliberately cropped at the bottom rather than shown whole. The
-           hero already presents a complete, front-on device; repeating that
-           treatment at every section turns three real screens into what
-           looks like one template rendered three times. Here the phone runs
-           past the frame, which suits a section about a screen that holds
-           more than fits. -->
-      <div class="split-visual device-wrap reveal" style="--i:2">
-        <div class="device-bleed">
-          <div class="device">
-            <div class="device-screen">
-              <img src="img/property-full.jpg" width="598" height="1300" loading="lazy"
-                   alt="A property page in Estiqo showing the photo, address, purchase price, estimated value, gross yield and monthly cash flow.">
+          <div class="split-visual device-wrap hub-visual reveal" style="--i:2">
+            <div class="device-bleed">
+              <div class="device">
+                <div class="device-screen">
+                  <img src="img/property-full.jpg" width="598" height="1300" loading="lazy"
+                       alt="A property page in Estiqo showing the photo, address, purchase price, estimated value, gross yield and monthly cash flow.">
+                </div>
+              </div>
             </div>
+
+            <!-- One card per chapter, floating over the device's edge while
+                 its bullet is active. DOM, not screenshots — the same
+                 real-fragment language huly.io builds its scenes from. -->
+            <span class="hub-chip" data-chip="0" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              <span class="hc-copy">Rent in, repayments out<small>updates itself</small></span>
+            </span>
+            <span class="hub-chip" data-chip="1" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+              <span class="hc-copy">Rates notice — filed<small>snapped or imported</small></span>
+            </span>
+            <span class="hub-chip" data-chip="2" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+              <span class="hc-copy">Lease renewal<small>reminder set</small></span>
+            </span>
+            <span class="hub-chip" data-chip="3" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.4 2.1L8 9.6a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.4c.8.3 1.7.5 2.6.6a2 2 0 011.7 2z"/></svg>
+              <span class="hc-copy">Property manager<small>one tap to call</small></span>
+            </span>
+            <span class="hub-chip" data-chip="4" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <span class="hc-copy">Fixed rate ends<small>full history kept</small></span>
+            </span>
+            <span class="hub-chip" data-chip="5" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+              <span class="hc-copy">Up to 30 photos<small>swipeable gallery</small></span>
+            </span>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 </section>
 
@@ -436,7 +542,7 @@
      used (cropped at source to the region carrying each step's
      meaning), so nothing here is a new claim or a re-crop in CSS.
      ============================================================ -->
-<section class="band tight steps-band" data-liquid>
+<section class="band tight steps-band" data-liquid data-scrub data-rays>
   <div class="liquid" aria-hidden="true">
     <div class="liquid-inner">
       <span class="blob green blob-1"></span>
@@ -447,13 +553,23 @@
   <div class="container">
     <div class="section-head">
       <p class="eyebrow reveal">Getting started</p>
-      <h2 class="reveal" style="--i:1">Start with one property. Add the rest whenever.</h2>
+      <h2 class="reveal shiny-text shiny-head" style="--i:1">Start with one property. Add the rest whenever.</h2>
       <p class="lede reveal" style="--i:2">You don't need last year's paperwork to begin. Enter a property, bring across the loan and lease, and Estiqo starts tracking from that day forward.</p>
     </div>
 
+    <div class="steps-wrap">
+      <!-- Draws itself through the three steps as the section scrolls:
+           the section's argument — this is a short sequence, not a
+           project — made visible. pathLength="1" normalises the dash
+           maths so CSS can scrub the offset as a plain 0..1 number. -->
+      <svg class="steps-line" viewBox="0 0 1000 90" fill="none" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 72 C 150 72, 190 18, 330 18 S 500 72, 640 72 S 910 18, 1000 18"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+              stroke-dasharray="1" pathLength="1"/>
+      </svg>
     <ol class="steps">
       <li class="step reveal">
-        <div class="step-shot">
+        <div class="step-shot glow-pool soft" style="--i:0">
           <img src="img/property-screen.jpg" width="900" height="671" loading="lazy"
                alt="A property page in Estiqo showing the photo, address, purchase price, estimated value, gross yield and monthly cash flow.">
         </div>
@@ -462,7 +578,7 @@
         <p>Address, type and a photo. Tell Estiqo whether a property manager handles the lease, or you do.</p>
       </li>
       <li class="step reveal" style="--i:1">
-        <div class="step-shot">
+        <div class="step-shot glow-pool soft" style="--i:1">
           <img src="img/keydates-screen.jpg" width="900" height="671" loading="lazy"
                alt="Key dates in Estiqo: insurance renewal, council rates and lease expiry, each with a reminder badge.">
         </div>
@@ -471,7 +587,7 @@
         <p>Loan, lease and the dates that matter. Cash flow and reminders begin straight away.</p>
       </li>
       <li class="step reveal" style="--i:2">
-        <div class="step-shot">
+        <div class="step-shot glow-pool soft" style="--i:2">
           <img src="img/documents-screen.jpg" width="900" height="671" loading="lazy"
                alt="The Documents tab in Estiqo with the EOFY pack export banner above a filed document library.">
         </div>
@@ -480,6 +596,7 @@
         <p>Yield, equity and cash flow at a glance — and a full EOFY pack when tax time comes around.</p>
       </li>
     </ol>
+    </div>
   </div>
 </section>
 
@@ -490,7 +607,7 @@
      invented totals would be the one place on this page where the
      numbers weren't read off a real screen.
      ============================================================ -->
-<section class="band" data-liquid>
+<section class="band" data-liquid data-scrub>
   <div class="liquid" aria-hidden="true">
     <div class="liquid-inner">
       <span class="blob green blob-1"></span>
@@ -502,7 +619,7 @@
     <div class="split">
       <div class="split-copy">
         <p class="eyebrow reveal">Tax time</p>
-        <h2 class="reveal" style="--i:1">EOFY in one tap.</h2>
+        <h2 class="reveal shiny-text shiny-head" style="--i:1">EOFY in one tap.</h2>
         <p class="lede reveal" style="--i:2">What used to take a weekend takes a tap. Estiqo assembles the whole financial year into a pack your accountant can actually work from — and tells you what's still missing before they have to ask.</p>
 
         <div class="eofy-pack reveal" style="--i:3">
@@ -522,8 +639,13 @@
             <span class="pr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21h18M6 21V9l6-5 6 5v12"/></svg></span>
             Capital works <span class="pr-val muted">itemised</span>
           </div>
-          <div class="pack-row">
-            <span class="pr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg></span>
+          <!-- The pack finishing its own audit: the amber flag lands with
+               the row, then crossfades to the tick as the scroll carries on. -->
+          <div class="pack-row flagged">
+            <span class="pr-icon">
+              <span class="ic-flag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg></span>
+              <span class="ic-tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+            </span>
             Anything missing <span class="pr-val muted">flagged</span>
           </div>
           <div class="pack-formats">
@@ -539,7 +661,28 @@
            banner is about nine pixels of type. Shown at its own scale it is
            legible, which is the entire argument of the section. -->
       <div class="split-visual reveal" style="--i:2">
-        <figure class="detail-shot">
+        <!-- The pack, as an object you can open. Hover lifts the lid and
+             the papers peek; click (or Enter/Space) fans them out to the
+             three document types the app's own Documents screen files —
+             a rates notice, a lease and an insurance policy. Decorative
+             but not empty: the labels are real, and the whole thing is a
+             button, so keyboard and screen-reader users get the same
+             thing pointer users do. -->
+        <div class="doc-folder-wrap">
+          <button class="doc-folder" type="button" aria-expanded="false"
+                  aria-label="Open the document folder">
+            <span class="folder-back">
+              <span class="paper paper-1"><span class="paper-label">Rates notice</span></span>
+              <span class="paper paper-2"><span class="paper-label">Lease agreement</span></span>
+              <span class="paper paper-3"><span class="paper-label">Insurance policy</span></span>
+              <span class="folder-front"></span>
+              <span class="folder-front right"></span>
+            </span>
+          </button>
+          <p class="doc-folder-caption">Every receipt and document, filed against its property.</p>
+        </div>
+
+        <figure class="detail-shot glow-edge glow-pool reveal">
           <img src="img/eofy-detail.jpg" width="1121" height="446" loading="lazy"
                alt="The EOFY pack banner in Estiqo: &quot;EOFY pack — FY 2025–26, income, expenses and receipts, ready for your accountant&quot;, with an Export button.">
         </figure>
@@ -555,7 +698,7 @@
      server or a network line, because the entire claim is that
      there is nothing on the other end of one.
      ============================================================ -->
-<section class="band privacy" id="privacy" data-liquid>
+<section class="band privacy" id="privacy" data-liquid data-scrub data-aurora>
   <div class="liquid" aria-hidden="true">
     <div class="liquid-inner">
       <span class="blob green blob-1"></span>
@@ -566,7 +709,7 @@
   <div class="container">
     <div class="privacy-inner">
       <p class="eyebrow reveal" style="justify-content:center">Privacy</p>
-      <h2 class="reveal" style="--i:1">Built private.</h2>
+      <h2 class="reveal shiny-text shiny-head" style="--i:1">Built private.</h2>
       <p class="lede reveal" style="--i:2">Your portfolio lives on your iPhone, protected by Face ID. We can't see your data. That's the point.</p>
 
       <!-- A padlock in a phone was the obvious drawing and said nothing
@@ -581,6 +724,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2"/><path d="M9 10v1M15 10v1M9.5 15c1.5 1.2 3.5 1.2 5 0"/></svg>
             Face ID
           </span>
+          <span class="pp-scan" aria-hidden="true"></span>
           <dl class="pp-rows">
             <div><dt>Est. value</dt><dd>$1.44M</dd></div>
             <div><dt>Total debt</dt><dd>$670K</dd></div>
@@ -633,14 +777,14 @@
     <div class="split">
       <div class="split-copy">
         <p class="eyebrow reveal">Local</p>
-        <h2 class="reveal" style="--i:1">Made for Australian investors.</h2>
+        <h2 class="reveal shiny-text shiny-head" style="--i:1">Made for Australian investors.</h2>
         <p class="lede reveal" style="--i:2">Not a US app with the currency symbol swapped. The financial year runs July to June, the categories are the ones your accountant expects, and the concepts are the ones you actually deal with.</p>
       </div>
 
       <div class="split-visual">
         <div class="au-chips">
           <span class="au-chip reveal">Negative gearing</span>
-          <span class="au-chip reveal" style="--i:1">EOFY · 1 Jul – 30 Jun</span>
+          <span class="au-chip au-flip reveal" style="--i:1"><span class="flip-box"><span class="flip-old">EOFY · 1 Jan – 31 Dec</span><span class="flip-new">EOFY · 1 Jul – 30 Jun</span></span></span>
           <span class="au-chip reveal" style="--i:2">Strata fees</span>
           <span class="au-chip reveal" style="--i:3">Land tax</span>
           <span class="au-chip reveal" style="--i:4">Fixed-rate expiry</span>
@@ -673,7 +817,7 @@
   <div class="container">
     <div class="section-head centred">
       <p class="eyebrow reveal" style="justify-content:center">Pricing</p>
-      <h2 class="reveal" style="--i:1">Every property, free. Pay only for tax time.</h2>
+      <h2 class="reveal shiny-text shiny-head" style="--i:1">Every property, free. Pay only for tax time.</h2>
       <p class="lede reveal" style="--i:2">Track as many properties as you own, for as long as you own them, at no cost. Premium adds the accountant-ready EOFY pack and the full investment toolkit.</p>
       <!-- Shown only where the cards actually become a carousel. On desktop
            both plans are side by side and telling someone to swipe would be
@@ -704,8 +848,8 @@
         <a class="btn btn-secondary" href="#final">Start free</a>
       </div>
 
-      <div class="price-card featured reveal" style="--i:1">
-        <p class="price-name">Premium</p>
+      <div class="price-card featured glow-edge reveal" style="--i:1">
+        <p class="price-name"><span class="shiny-text">Premium</span></p>
         <p class="price-amount">A$59.99 <span>/year</span></p>
         <p class="price-sub">Works out at A$5 a month.</p>
         <div class="price-alt">
@@ -719,6 +863,8 @@
           <li>Cash flow forecast &amp; value over time</li>
           <li>Equity &amp; borrowing snapshot</li>
           <li>Portfolio analytics</li>
+          <li>What if? — rate rises, rent and growth simulated</li>
+          <li>Improvement projects</li>
           <li>Due diligence checklists &amp; calculators</li>
         </ul>
         <a class="btn btn-primary" href="#final">Get Premium</a>
@@ -745,7 +891,7 @@
   <div class="container">
     <div class="section-head centred">
       <p class="eyebrow reveal" style="justify-content:center">Good to know</p>
-      <h2 class="reveal" style="--i:1">Questions, answered.</h2>
+      <h2 class="reveal shiny-text shiny-head" style="--i:1">Questions, answered.</h2>
     </div>
 
     <div class="faq-list" id="faqList">
@@ -770,7 +916,7 @@
           So what does Premium actually unlock?
           <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
         </button>
-        <div class="faq-a"><p>The end-of-year work and the analysis on top of it: EOFY packs for your accountant, the depreciation schedule, the CGT sale worksheet, cash flow forecasts, value over time, the equity and borrowing snapshot, portfolio analytics, and the due diligence checklists and calculators. In other words, the parts you reach for once a year or when you're deciding something — not the parts you use every week.</p></div>
+        <div class="faq-a"><p>The end-of-year work and the analysis on top of it: EOFY packs for your accountant, the depreciation schedule, the CGT sale worksheet, cash flow forecasts, value over time, the equity and borrowing snapshot, portfolio analytics, the What if? simulator, improvement projects, and the due diligence checklists and calculators. In other words, the parts you reach for once a year or when you're deciding something — not the parts you use every week.</p></div>
       </div>
 
       <div class="faq-item">
@@ -803,9 +949,10 @@
 <!-- ============================================================
      FINAL CTA
      ============================================================ -->
-<section class="final" id="final" data-liquid>
+<section class="final" id="final" data-liquid data-molten>
   <div class="liquid" aria-hidden="true">
     <div class="liquid-inner">
+      <span class="aurora"></span>
       <span class="blob green blob-1"></span>
       <span class="blob terra blob-2"></span>
       <span class="blob green blob-3"></span>
@@ -814,7 +961,7 @@
 
   <div class="container">
     <img class="mark reveal" src="img/icon.png" width="62" height="62" alt="">
-    <h2 class="reveal" style="--i:1">Your portfolio, finally in one place.</h2>
+    <h2 class="reveal shiny-text shiny-head" style="--i:1">Your portfolio, finally in one place.</h2>
     <p class="lede reveal" style="--i:2">Estiqo arrives on the App Store on <strong>Tuesday 8 September</strong>. Leave your email and you'll know the moment it's live.</p>
 
     <!-- ON LAUNCH DAY (8 Sep 2026): the waitlist form below has done its job
@@ -896,5 +1043,10 @@
 </footer>
 
 <script src="js/estiqo.js" defer></script>
+<script src="js/aurora-flow.js" defer></script>
+<script src="js/molten-flow.js" defer></script>
+<script src="js/light-pillar.js" defer></script>
+<script src="js/side-rays.js" defer></script>
+<script src="js/doc-folder.js" defer></script>
 </body>
 </html>

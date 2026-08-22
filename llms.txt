@@ -21,7 +21,8 @@ category.
   A$149.99 once.
 - Premium unlocks: EOFY export packs, depreciation schedule, CGT sale
   worksheet, cash flow forecast, value over time, equity and borrowing
-  snapshot, portfolio analytics, due diligence checklists and calculators.
+  snapshot, portfolio analytics, the "What if?" rate-rise and rent simulator,
+  improvement projects, due diligence checklists and calculators.
 - Free tier includes: unlimited properties, cash flow, income and expenses,
   documents, receipts and photos, leases, loans, contacts, key dates, Face ID
   lock and one-tap backup export.

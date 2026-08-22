@@ -490,3 +490,189 @@
     });
   }
 })();
+
+/* ============================================================
+   Motion 2.0 — the scroll-scrub engine
+   ------------------------------------------------------------
+   Everything below drives ONE custom property per scene: --p,
+   a 0..1 progress value for how far the scene has travelled
+   through the viewport. All the actual animation stays in the
+   stylesheet as calc() of that number, which keeps the contract
+   the first half of this file established: JS writes variables
+   and classes, CSS owns every visual consequence, and the page
+   is complete with this block deleted.
+
+   Scrubbing rather than triggering is the point. A triggered
+   reveal fires once and is over; a scrubbed scene is tied to
+   the scroll position itself, runs backwards when the visitor
+   scrolls up, and makes them feel like they are driving it.
+
+   With motion reduced this entire engine never installs, and
+   the stylesheet's no-preference gate leaves every scene at its
+   finished state.
+   ============================================================ */
+
+(function () {
+  "use strict";
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  var doc = document.documentElement;
+  var vh = window.innerHeight;
+  var pageH = 1;
+
+  /* ---------- Scene registry ---------- */
+
+  /* Positions are measured once per resize, never per frame. The frame
+     loop reads scrollY and does arithmetic — no layout reads, so it can
+     run at 120Hz on a ProMotion display without jank. */
+
+  var scenes = [].map.call(document.querySelectorAll("[data-scrub]"), function (el) {
+    return {
+      el: el,
+      top: 0,
+      height: 1,
+      last: -1,
+      counts: [].map.call(el.querySelectorAll("[data-count]"), function (c) {
+        return {
+          el: c,
+          to: parseFloat(c.getAttribute("data-count")),
+          pre: c.getAttribute("data-pre") || "",
+          post: c.getAttribute("data-post") || "",
+          dp: parseInt(c.getAttribute("data-dp") || "0", 10),
+          lastText: ""
+        };
+      })
+    };
+  });
+
+  var hero = document.querySelector("[data-hero]");
+  var heroH = 1;
+
+  var pin = document.querySelector("[data-pin]");
+  var pinTop = 0, pinRange = 1, pinSteps = 1, pinLastStep = -1;
+
+  function measure() {
+    vh = window.innerHeight;
+    pageH = Math.max(1, doc.scrollHeight - vh);
+    var sy = window.scrollY;
+
+    scenes.forEach(function (s) {
+      var r = s.el.getBoundingClientRect();
+      s.top = r.top + sy;
+      s.height = Math.max(1, r.height);
+    });
+
+    if (hero) heroH = Math.max(1, hero.getBoundingClientRect().height);
+
+    if (pin) {
+      var pr = pin.getBoundingClientRect();
+      pinTop = pr.top + sy;
+      pinRange = Math.max(1, pr.height - vh);
+      pinSteps = pin.querySelectorAll(".hub-item").length || 1;
+    }
+  }
+
+  /* ---------- The frame ---------- */
+
+  function frame() {
+    ticking = false;
+    var sy = window.scrollY;
+
+    /* Reading-progress hairline under the nav. */
+    doc.style.setProperty("--scroll-p", Math.min(1, sy / pageH).toFixed(4));
+
+    /* Hero: 0 at the top of the page, 1 after ~two thirds of the hero has
+       been scrolled away. Drives the fragment convergence. */
+    if (hero) {
+      var hp = Math.min(1, Math.max(0, sy / (heroH * 0.62)));
+      hero.style.setProperty("--hp", hp.toFixed(4));
+    }
+
+    /* Scrub scenes: 0 when the section's top touches the viewport bottom,
+       1 when its bottom leaves the viewport top. Skipped (no style write)
+       while fully off screen. */
+    scenes.forEach(function (s) {
+      var p = (sy + vh - s.top) / (vh + s.height);
+      if (p < -0.05 || p > 1.05) return;
+      p = Math.max(0, Math.min(1, p));
+      if (Math.abs(p - s.last) < 0.0005) return;
+      s.last = p;
+      s.el.style.setProperty("--p", p.toFixed(4));
+
+      /* Counters ride the same progress: they count up on the way down,
+         count back on the way up, and always land exactly on the value
+         that is already in the markup for everyone without JS. */
+      s.counts.forEach(function (c) {
+        var cp = Math.max(0, Math.min(1, (p - 0.18) * 2.6));
+        var eased = 1 - Math.pow(1 - cp, 3);
+        var text = c.pre + (c.to * eased).toFixed(c.dp) + c.post;
+        if (text !== c.lastText) {
+          c.lastText = text;
+          c.el.textContent = text;
+        }
+      });
+    });
+
+    /* The pinned hub: progress across the tall stage picks the active
+       chapter. The class flip is cheap and CSS does the crossfade. */
+    if (pin) {
+      var pp = (sy - pinTop) / pinRange;
+      if (pp > -0.1 && pp < 1.1) {
+        var clamped = Math.max(0, Math.min(1, pp));
+        pin.style.setProperty("--p", clamped.toFixed(4));
+        var step = Math.min(pinSteps - 1, Math.floor(clamped * pinSteps));
+        if (step !== pinLastStep) {
+          pinLastStep = step;
+          pin.setAttribute("data-step", String(step));
+        }
+      }
+    }
+  }
+
+  var ticking = false;
+  function queue() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(frame);
+  }
+
+  measure();
+  frame();
+
+  window.addEventListener("scroll", queue, { passive: true });
+  window.addEventListener("resize", function () { measure(); queue(); }, { passive: true });
+  window.addEventListener("load", function () { measure(); queue(); });
+
+  /* Fonts and lazy media change section heights after first paint. */
+  if ("ResizeObserver" in window) {
+    var ro = new ResizeObserver(function () { measure(); queue(); });
+    ro.observe(document.body);
+  }
+
+  /* ---------- Hero fragment pointer drift ---------- */
+
+  /* The fragments share the liquid field's pointer response but travel
+     further, which is what sells them as floating in front of it. Reuses
+     the hero's own pointer events rather than adding new maths. */
+  var frags = document.querySelector(".hero-frags");
+  if (frags && hero && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    var fx = 0, fy = 0, fPending = false;
+    hero.addEventListener("pointermove", function (e) {
+      var rect = hero.getBoundingClientRect();
+      fx = ((e.clientX - rect.left) / rect.width * 2 - 1) * 14;
+      fy = ((e.clientY - rect.top) / rect.height * 2 - 1) * 10;
+      if (fPending) return;
+      fPending = true;
+      requestAnimationFrame(function () {
+        fPending = false;
+        frags.style.setProperty("--px", fx.toFixed(2));
+        frags.style.setProperty("--py", fy.toFixed(2));
+      });
+    }, { passive: true });
+    hero.addEventListener("pointerleave", function () {
+      frags.style.setProperty("--px", "0");
+      frags.style.setProperty("--py", "0");
+    }, { passive: true });
+  }
+})();
