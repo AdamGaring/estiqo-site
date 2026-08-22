@@ -60,6 +60,47 @@
 }
 </script>
 
+<!-- Entity disambiguation, added 23 Aug 2026.
+     `estiqo.app` — an unrelated carpet-cleaning estimates SaaS — currently
+     owns the "estiqo" brand result, and Google's AI Overview already
+     describes this app correctly while linking to none of its own pages.
+     Both symptoms of the same gap: Google knows the *thing* and hasn't
+     connected it to this *site*. An explicit Organization node, with
+     `sameAs` naming every profile the brand controls, is how that link is
+     asserted rather than inferred.
+     ⚠️ `sameAs` is deliberately empty until the real profile URLs are
+     confirmed — a sameAs pointing at a handle that isn't ours, or a 404,
+     is worse than no sameAs at all, because Google fetches every one. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://estiqo.com.au/#organization",
+      "name": "Estiqo",
+      "url": "https://estiqo.com.au/",
+      "email": "hello@estiqo.com.au",
+      "logo": "https://estiqo.com.au/img/icon.png",
+      "description": "Estiqo is an Australian iPhone app for property investors — every number, document, contact and key date for a rental portfolio in one private hub, with an accountant-ready EOFY pack.",
+      "areaServed": {
+        "@type": "Country",
+        "name": "Australia"
+      },
+      "sameAs": []
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://estiqo.com.au/#website",
+      "url": "https://estiqo.com.au/",
+      "name": "Estiqo",
+      "inLanguage": "en-AU",
+      "publisher": { "@id": "https://estiqo.com.au/#organization" }
+    }
+  ]
+}
+</script>
+
 <link rel="icon" type="image/png" href="img/icon.png">
 <link rel="apple-touch-icon" href="img/icon.png">
 <link rel="stylesheet" href="css/estiqo.css">
@@ -221,7 +262,13 @@
 
   <div class="hero-grid">
     <div>
-      <p class="eyebrow reveal">Coming soon for iPhone</p>
+      <!-- The brand name belongs above the fold in real text, not only in
+           <title> and the nav logo. The H1 is deliberately left alone — its
+           words are individually animated by --wi index, and "Estiqo" doesn't
+           belong in a line that reads "Your property portfolio hub." The
+           eyebrow costs nothing visually and puts the word on the page.
+           On launch day this becomes "Estiqo · Now on the App Store". -->
+      <p class="eyebrow reveal">Estiqo · Coming soon for iPhone</p>
       <h1><span class="w" style="--wi:0">Your</span> <span class="w" style="--wi:1">property</span><br><span class="w" style="--wi:2">portfolio</span> <span class="w" style="--wi:3"><span class="accent shiny-text">hub</span>.</span></h1>
       <p class="lede reveal" style="--i:2">Every number, document, contact and key date for your investment properties — in one beautiful, private hub.</p>
 
