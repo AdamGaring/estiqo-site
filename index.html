@@ -66,8 +66,36 @@
 
 <!-- Sets `.js` before first paint so reveal styles apply without a flash of
      already-visible content. Its absence is the signal to the stylesheet
-     that JS is unavailable, in which case nothing is ever hidden. -->
-<script>document.documentElement.classList.add("js");</script>
+     that JS is unavailable, in which case nothing is ever hidden.
+
+     Also turns off the browser's scroll restoration. Reloading a normal
+     page and landing where you left off is helpful; reloading THIS one
+     was not. The page is 12,000px of scroll-scrubbed scenes whose height
+     settles only after web fonts, lazy images and the 420vh pinned stage
+     have all resolved — so the position restored against the old layout
+     no longer pointed at the same place, and a refresh dropped you into
+     the middle of the hero with the headline cut in half. A landing page
+     should open on its opening line.
+
+     `manual` only disables *history* restoration; a real fragment link
+     (estiqo.com.au/#pricing) is unaffected and still jumps to its
+     section, which is why there is no scrollTo(0,0) here to fight it. -->
+<script>
+  document.documentElement.classList.add("js");
+  if ("scrollRestoration" in history) {
+    /* Scoped to reloads. Suppressing restoration outright would also stop
+       the back button returning you to where you were when you left for
+       the privacy policy or terms, which is behaviour worth keeping. When
+       the navigation type can't be read, default to manual: opening at
+       the top is the safe wrong answer, landing mid-headline is not. */
+    var nav = (window.performance && performance.getEntriesByType)
+      ? performance.getEntriesByType("navigation")[0] : null;
+    var reloaded = nav
+      ? nav.type === "reload"
+      : !(performance.navigation && performance.navigation.type === 0);
+    history.scrollRestoration = reloaded ? "manual" : "auto";
+  }
+</script>
 
 <!-- The FAQ, machine-readable. The answers are already on the page verbatim —
      this only restates them where a search engine or an AI answer engine can
