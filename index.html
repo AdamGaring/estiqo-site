@@ -68,9 +68,14 @@
      connected it to this *site*. An explicit Organization node, with
      `sameAs` naming every profile the brand controls, is how that link is
      asserted rather than inferred.
-     ⚠️ `sameAs` is deliberately empty until the real profile URLs are
-     confirmed — a sameAs pointing at a handle that isn't ours, or a 404,
-     is worse than no sameAs at all, because Google fetches every one. -->
+     ⚠️ Google fetches every URL in `sameAs`, so a wrong handle or a 404 is
+     worse than no sameAs at all. All three below were confirmed returning
+     200 on 23 Aug 2026. TikTok's is stored without the `?lang=en` the
+     browser adds — that's a locale parameter, not part of the identity.
+     ⚠️ The App Store listing belongs here too and is deliberately absent:
+     `apps.apple.com/app/id6801718917` still 404s while 1.0 is in review.
+     Add it on launch day, alongside the other placeholders that flip then
+     — it will be the strongest entry in this list. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -87,7 +92,11 @@
         "@type": "Country",
         "name": "Australia"
       },
-      "sameAs": []
+      "sameAs": [
+        "https://www.instagram.com/estiqoau/",
+        "https://x.com/estiqoau",
+        "https://www.tiktok.com/@estiqoau"
+      ]
     },
     {
       "@type": "WebSite",
