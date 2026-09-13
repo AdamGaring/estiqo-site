@@ -111,9 +111,13 @@
 }
 </script>
 
+<!-- The hero's LCP image now lives inside the mock-up, which JavaScript
+     builds — so the preload scanner never sees it in the markup. -->
+<link rel="preload" as="image" href="img/mock/banksia.jpg" fetchpriority="high">
 <link rel="icon" type="image/png" href="img/icon.png">
 <link rel="apple-touch-icon" href="img/icon.png">
 <link rel="stylesheet" href="css/estiqo.css">
+<link rel="stylesheet" href="css/app-mock.css">
 
 <!-- Sets `.js` before first paint so reveal styles apply without a flash of
      already-visible content. Its absence is the signal to the stylesheet
@@ -346,12 +350,32 @@
         </span>
       </div>
 
+      <!-- The hero phone runs the real app, not a picture of it.
+           js/app-mock.js builds four working screens into #appMock —
+           Portfolio, Property, Documents and Settings — with real
+           scrolling, a working tab bar, and property tiles that open
+           the property they name. Content and measurements both come
+           from the app's own source (Models/SampleData.swift for the
+           demo portfolio, Theme.swift and the Views for the layout),
+           so nothing here can promise something the product doesn't
+           ship.
+
+           The <noscript> below is the whole fallback story: without
+           JavaScript the visitor gets exactly the screenshot this
+           replaced. If the script loads but throws, its own catch puts
+           the same image back — see the end of js/app-mock.js. -->
       <div class="device glow-edge">
-        <div class="device-screen">
-          <img src="img/portfolio-full.jpg" width="598" height="1300" fetchpriority="high"
-               alt="Estiqo's Portfolio screen: two investment properties with photos, showing $1.44M estimated value, $670K total debt and +$536 a month cash flow.">
+        <div class="device-screen" id="appMock">
+          <noscript>
+            <img src="img/portfolio-full.jpg" width="598" height="1300"
+                 alt="Estiqo's Portfolio screen: two investment properties with photos, showing $1.44M estimated value, $670K total debt and +$536 a month cash flow.">
+          </noscript>
         </div>
       </div>
+      <p class="mock-hint reveal" style="--i:3">
+        <span aria-hidden="true">Interactive — tap a property, or switch tabs</span>
+        <span class="sr-only">The phone above is an interactive demonstration of the Estiqo app. Use the tab buttons to move between Portfolio, Property, Documents and Settings, and choose a property to open it.</span>
+      </p>
     </div>
   </div>
 </section>
@@ -1098,6 +1122,7 @@
 </footer>
 
 <script src="js/estiqo.js" defer></script>
+<script src="js/app-mock.js" defer></script>
 <script src="js/aurora-flow.js" defer></script>
 <script src="js/molten-flow.js" defer></script>
 <script src="js/light-pillar.js" defer></script>

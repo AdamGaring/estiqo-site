@@ -523,7 +523,14 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
 
 .device {
   position: relative;
-  width: 300px;
+  /* Width is carried as a bare NUMBER, not a length, because
+     css/app-mock.css has to divide it to work out the scale factor
+     for the hero's interactive mock-up — and calc() cannot divide a
+     length by a length. Every override below sets the number, so the
+     phone and the mock inside it can never disagree about how wide
+     the phone is. */
+  --dev-w-n: 300;
+  width: calc(var(--dev-w-n) * 1px);
   aspect-ratio: 1206 / 2622;
   background: #1C1C1E;
   border-radius: 48px;
@@ -553,7 +560,7 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
   pointer-events: none;
 }
 
-.device.sm { width: 262px; }
+.device.sm { --dev-w-n: 262; }
 
 /* Bottom-cropped device. The mask does the cropping rather than a hard
    overflow edge, so the phone dissolves out of frame instead of looking
@@ -564,7 +571,7 @@ h3 { font-size: 19px; letter-spacing: -0.018em; line-height: 1.25; }
   -webkit-mask-image: linear-gradient(to bottom, #000 74%, transparent);
   mask-image: linear-gradient(to bottom, #000 74%, transparent);
 }
-.device-bleed .device { width: 300px; }
+.device-bleed .device { --dev-w-n: 300; }
 
 /* Detail crop — a piece of a screen at its own scale, framed as an
    artefact rather than dressed up as a device. */
@@ -1367,7 +1374,13 @@ footer {
   /* Device moves up directly under the CTA so the product is on the
      first screen. It used to sit 650px down, below a six-line centred
      paragraph — a phone visitor's entire first impression was type. */
-  .device { width: 250px; }
+  .device { --dev-w-n: 250; }
+  /* The mocked phone runs wider than the screenshot phones from here
+     down. Below 860px the hero is a single centred column with room
+     to spare, and every tap target inside the mock is scaled by the
+     phone's width — at 250px the tab bar's items are 30px tall, which
+     is a control you have to aim at. */
+  .device:has(.mock) { --dev-w-n: 288; }
 
   .band { padding: 64px 0; }
   .band.tight { padding: 52px 0; }
@@ -1539,7 +1552,8 @@ footer {
   .nav-inner { padding: 10px 20px; }
 
   .hero h1 { letter-spacing: -0.035em; }
-  .device { width: 228px; }
+  .device { --dev-w-n: 228; }
+  .device:has(.mock) { --dev-w-n: 268; }
   .cta-row { flex-direction: column; align-items: stretch; gap: 10px; }
   .cta-row .btn { width: 100%; }
   .cta-fine { text-align: center; }
@@ -2963,4 +2977,12 @@ html:not(.js) .au-flip .flip-old { display: none; }
   .doc-folder .paper,
   .doc-folder .folder-front,
   .doc-folder .paper-label { transition: none; }
+}
+
+/* The smallest phones still in circulation (320pt wide) have 280px of
+   content once the gutter is taken off, so the hero's interactive
+   mock-up steps down once more — 268 would sit 6px from each edge,
+   which reads as a mistake rather than a margin. */
+@media (max-width: 360px) {
+  .device:has(.mock) { --dev-w-n: 244; }
 }

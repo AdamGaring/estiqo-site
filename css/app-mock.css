@@ -1,0 +1,979 @@
+/* ============================================================
+   Estiqo — interactive app mock-up (hero phone)
+   ------------------------------------------------------------
+   Companion to js/app-mock.js. Everything here is scoped under
+   `.mock`, so it can't reach any of the page's own styles.
+
+   THE ONE IDEA IN THIS FILE
+   The mock is laid out at the iPhone's real point size — 402 x 874
+   — and a single `transform: scale()` shrinks it into whatever
+   width the phone is at the current breakpoint. That means every
+   `px` below is a genuine iOS point, copyable straight out of the
+   Swift, and it means the hit boxes are correct at every size for
+   free: a transform scales hit-testing along with the pixels, so
+   a 44pt tap target is exactly 44pt-equivalent whether the phone
+   is rendering at 300px or 240px.
+
+   The scale is derived, not guessed: `--dev-w-n` is the phone's
+   width as a bare number (declared next to `.device`'s width in
+   estiqo.css so the two can never drift), less the 5px bezel on
+   each side, over 402.
+
+   APPEARANCE
+   Deliberately always light, in both page themes. The phone is a
+   photograph of a product, and every other screenshot on this page
+   is a light capture; a hero phone that flipped to dark while the
+   three shots below it stayed light would read as two different
+   apps. Colours are the app's own: AccentColor, DS.positive,
+   DS.negative and AuraBackground from Theme.swift.
+   ============================================================ */
+
+/* ---------- Frame ---------- */
+
+.mock-host {
+  /* The real screen's aspect, so the mock fills it exactly rather
+     than the old screenshot's slightly-off 598x1300 crop. */
+  aspect-ratio: 402 / 874;
+  --mock-s: calc((var(--dev-w-n, 300) - 10) / 402);
+}
+/* Only the mocked phone drops the fixed device aspect — the hub
+   section's phone still carries a screenshot and keeps it. */
+.device:has(> .mock-host) { aspect-ratio: auto; }
+
+.mock {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 402px;
+  height: 874px;
+  transform: scale(var(--mock-s));
+  transform-origin: 0 0;
+  overflow: hidden;
+  border-radius: calc(43px / var(--mock-s));
+  isolation: isolate;
+
+  /* iOS system palette, light. */
+  --m-bg: #F2F2F7;
+  --m-card: #FFFFFF;
+  --m-ink: #000000;
+  --m-2: rgba(60, 60, 67, 0.62);
+  --m-3: rgba(60, 60, 67, 0.32);
+  --m-line: rgba(60, 60, 67, 0.2);
+  --m-accent: #1F9D63;
+  --m-pos: #227E4F;
+  --m-neg: #B23B40;
+  --m-orange: #C4761B;
+
+  background: var(--m-bg);
+  color: var(--m-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.25;
+  letter-spacing: 0;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+  cursor: default;
+}
+
+/* AuraBackground (Theme.swift): three huge, heavily-blurred circles
+   at low opacity — accent top-left, warm right, accent bottom-left. */
+.maura {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle 260px at 6% 2%, rgba(31, 157, 99, 0.16), transparent 70%),
+    radial-gradient(circle 215px at 98% 40%, rgba(204, 140, 84, 0.13), transparent 70%),
+    radial-gradient(circle 195px at 10% 94%, rgba(31, 157, 99, 0.09), transparent 70%);
+}
+
+/* ---------- Screens ---------- */
+
+.mscreens { position: absolute; inset: 0; }
+
+.mscreen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(var(--mx, 0), 0, 0);
+  transition: opacity 0.24s var(--ease-soft), transform 0.34s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.34s;
+}
+.mscreen::-webkit-scrollbar { display: none; }
+.mscreen.on {
+  opacity: 1;
+  visibility: visible;
+  --mx: 0px;
+  transition-delay: 0s, 0s, 0s;
+}
+.mock[data-dir="fwd"] .mscreen:not(.on) { --mx: -18px; }
+.mock[data-dir="back"] .mscreen:not(.on) { --mx: 18px; }
+.mock[data-dir="fwd"] .mscreen.on { animation: mock-in-fwd 0.34s cubic-bezier(0.32, 0.72, 0, 1); }
+.mock[data-dir="back"] .mscreen.on { animation: mock-in-back 0.34s cubic-bezier(0.32, 0.72, 0, 1); }
+@keyframes mock-in-fwd { from { transform: translate3d(22px, 0, 0); } }
+@keyframes mock-in-back { from { transform: translate3d(-22px, 0, 0); } }
+
+/* DS.pagePadding = 20. Top clears the 59pt safe area; the bottom
+   matches PortfolioView's own `Spacer(minLength: 130)` so the last
+   card can clear the floating tab bar. */
+.mpad { padding: 83px 20px 130px; }
+.mpad-flush { padding-top: 0; }
+.mpad-docs { padding-top: 111px; }  /* 59 safe area + DocumentsView's 52 */
+
+/* ---------- Shared components ---------- */
+
+.mi { width: 1em; height: 1em; display: block; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.mi[data-fill] { fill: currentColor; stroke: none; }
+
+.t-pos { color: var(--m-pos); }
+.t-neg { color: var(--m-neg); }
+.t-ink { color: var(--m-ink); }
+
+/* CardBackground: DS.card, 19pt continuous radius,
+   .shadow(color: .black.opacity(0.05), radius: 10, y: 3).
+
+   NOTE ON EVERY SHADOW IN THIS FILE: SwiftUI's `radius:` is a Gaussian
+   radius, and CSS's blur-radius is roughly twice that — so a SwiftUI
+   radius of 10 is a 20px CSS blur, not 10px. Transcribing the numbers
+   straight across (which is what this file did at first) renders every
+   shadow in the mock about half as soft as the app's, which reads as a
+   subtly harder, flatter interface without ever looking wrong enough to
+   point at. */
+.mcard {
+  background: var(--m-card);
+  border-radius: 19px;
+  box-shadow: 0 3px 20px rgba(0, 0, 0, 0.05);
+}
+
+.mdiv { height: 1px; background: var(--m-line); margin-left: 63px; }
+
+/* DSRow — 34pt tinted icon tile, 15.5 title, 12.5 subtitle, 16/12. */
+.mrow {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 16px;
+  min-height: 58px;
+}
+.mrow-ic {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(31, 157, 99, 0.12);
+  color: var(--m-accent);
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+}
+.mrow-txt { flex: 1 1 auto; min-width: 0; display: block; }
+.mrow-txt b { display: block; font-size: 15.5px; font-weight: 500; letter-spacing: -0.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mrow-txt i { display: block; font-style: normal; font-size: 12.5px; color: var(--m-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mrow-trail { flex: 0 0 auto; display: flex; align-items: center; gap: 9px; }
+.mrow-amt { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mrow-stack { display: block; text-align: right; }
+.mrow-stack b { display: block; font-size: 14px; font-weight: 600; }
+.mrow-stack i { display: block; font-style: normal; font-size: 12.5px; color: var(--m-2); margin-top: 2px; }
+.mrow-chev { color: var(--m-3); font-size: 12px; }
+.mrow-menu { display: flex; align-items: center; gap: 3px; font-size: 14px; color: var(--m-2); }
+.mrow-menu .mi { font-size: 10px; stroke-width: 2.4; }
+
+/* DSRowOpenButton — the small trailing control that is the row's
+   only tap target in the app, so a tap can't be confused with the
+   start of a scroll. Reproduced at its real 30pt size. */
+.mrow-open {
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+  background: rgba(120, 120, 128, 0.12);
+  color: var(--m-2);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+}
+.mrow-open .mi { stroke-width: 2.4; }
+
+.mrow-pill {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 5px 11px;
+  border-radius: 11px;
+  background: rgba(120, 120, 128, 0.14);
+  color: var(--m-2);
+  white-space: nowrap;
+}
+.mrow-pill.soon { background: rgba(230, 150, 60, 0.2); color: var(--m-orange); }
+
+.mswitch {
+  width: 51px;
+  height: 31px;
+  border-radius: 16px;
+  background: rgba(120, 120, 128, 0.22);
+  position: relative;
+  flex: 0 0 auto;
+}
+.mswitch.on { background: var(--m-accent); }
+.mswitch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16);
+}
+.mswitch.on::after { left: 22px; }
+
+/* SectionHeader: 19pt bold, inset 5, 9 below. */
+.msec { display: flex; align-items: baseline; justify-content: space-between; padding: 0 5px 9px; }
+.msec h3 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; margin: 0; }
+.msec-a { font-size: 14px; font-weight: 600; color: var(--m-accent); }
+.msection { margin-top: 25px; }   /* DS.sectionSpacing */
+
+/* StatRow / StatTile. The 27pt min-height on the label is what keeps
+   three tiles the same height when one label wraps to two lines. */
+.mstats { display: flex; gap: 9px; margin-top: 16px; }
+.mstat {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px 13px;
+  background: var(--m-card);
+  border-radius: 19px;
+  box-shadow: 0 3px 20px rgba(0, 0, 0, 0.05);
+}
+.mstat-l {
+  display: block;
+  min-height: 27px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--m-2);
+}
+.mstat-v { display: flex; align-items: baseline; gap: 1px; margin-top: 3px; }
+.mstat-v b {
+  font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  font-size: 17.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+.mstat-v i { font-style: normal; font-size: 11.5px; color: var(--m-2); }
+
+.mlink {
+  padding: 13px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--m-accent);
+}
+.mfoot { margin: 8px 5px 0; font-size: 11.5px; line-height: 1.35; color: var(--m-2); }
+
+/* "Add a property" / "Add a document": a dashed 1.5pt outline at 40%
+   secondary, not a filled tile — the app draws the empty slot rather
+   than another solid card competing with the real ones. */
+.mbig {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 21px 0;
+  border: 1.5px dashed rgba(60, 60, 67, 0.32);
+  border-radius: 22px;
+  background: none;
+  color: var(--m-accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+.mbig .mi { font-size: 15px; stroke-width: 2.2; }
+.mbig-doc { border-radius: 19px; padding: 18px 0; }
+
+/* tagFilterRow — a horizontally scrolling chip row, the active chip
+   filled with the accent and the rest tinted at 10%. */
+.mchips {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 2px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.mchips::-webkit-scrollbar { display: none; }
+.mchip {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 13px;
+  border-radius: 99px;
+  background: rgba(31, 157, 99, 0.1);
+  color: var(--m-accent);
+  white-space: nowrap;
+}
+.mchip.on { background: var(--m-accent); color: #fff; }
+
+/* ---------- Portfolio ---------- */
+
+.mhead { padding-top: 24px; }
+.mhead h2 { margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.7px; line-height: 1.1; }
+.mhead p { margin: 3px 0 0; font-size: 14.5px; font-weight: 500; color: var(--m-2); }
+
+.mnext {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+}
+.mnext-ic {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(31, 157, 99, 0.12);
+  color: var(--m-accent);
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+}
+.mnext-ic .mi { fill: currentColor; fill-opacity: 0.18; }
+.mnext-t { flex: 1 1 auto; min-width: 0; }
+.mnext-t b { display: block; font-size: 15.5px; font-weight: 600; }
+.mnext-t i { display: block; font-style: normal; font-size: 12.5px; color: var(--m-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.mtiles { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+
+/* PropertyCard: 138pt photo, 22pt radius, 17/13 body padding. */
+.mtile {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--m-card);
+  box-shadow: 0 5px 28px rgba(0, 0, 0, 0.07);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  transition: transform 0.18s var(--ease-soft), box-shadow 0.18s var(--ease-soft);
+}
+.mtile-ph { display: block; height: 138px; overflow: hidden; }
+.mtile-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mtile-b { display: flex; align-items: center; gap: 10px; padding: 13px 17px; }
+.mtile-l { flex: 1 1 auto; min-width: 0; }
+.mtile-l b { display: block; font-size: 16.5px; font-weight: 700; letter-spacing: -0.3px; }
+.mtile-l i,
+.mtile-l em {
+  display: block;
+  font-style: normal;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mtile-l i { font-size: 13px; color: var(--m-2); }
+.mtile-l em { font-size: 12px; font-weight: 500; color: var(--m-accent); }
+.mtile-r { flex: 0 0 auto; text-align: right; }
+.mtile-r b {
+  display: block;
+  font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.mtile-r i { display: flex; gap: 4px; justify-content: flex-end; font-style: normal; font-size: 12.5px; color: var(--m-2); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.mtile-r i .t-pos { font-weight: 600; }
+
+/* ---------- Property detail ---------- */
+
+/* PropertyHeader: 330pt tall, ignoring the top safe area. */
+.mhero { position: relative; height: 330px; overflow: hidden; }
+.mhero > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mhero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.55) 100%);
+}
+.mhero-btns { position: absolute; top: 64px; right: 18px; display: flex; gap: 8px; }
+.mhero-b {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+}
+.mdots { width: 17px; height: 3px; position: relative; }
+.mdots, .mdots::before, .mdots::after { background: currentColor; border-radius: 50%; height: 3.4px; width: 3.4px; }
+.mdots::before, .mdots::after { content: ""; position: absolute; top: 0; }
+.mdots::before { left: -6.5px; }
+.mdots::after { left: 6.5px; }
+
+.mhero-t { position: absolute; left: 24px; right: 24px; bottom: 16px; color: #fff; }
+.mhero-t b { display: block; font-size: 28px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.08; }
+.mhero-t i { display: block; font-style: normal; font-size: 14.5px; font-weight: 500; color: rgba(255, 255, 255, 0.85); margin-top: 3px; }
+.mspecs { display: flex; align-items: center; gap: 13px; margin-top: 7px; }
+.mspecs > span { display: flex; align-items: center; gap: 5px; font-size: 13.5px; font-weight: 600; }
+.mspecs .mi { font-size: 13px; color: rgba(255, 255, 255, 0.8); }
+.mspecs em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  padding: 3.5px 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.mprice { display: flex; align-items: flex-end; justify-content: space-between; padding: 16px 24px 0; }
+.mprice i { display: block; font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: 0.7px; color: var(--m-2); }
+.mprice b {
+  display: block;
+  font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.mprice em { font-style: normal; font-size: 12.5px; color: var(--m-2); padding-bottom: 5px; }
+
+/* The property screen's own sections start flush under the price row,
+   so its scroller carries the page padding but no top inset. */
+.mscreen[data-screen="property"] .mpad { padding-top: 0; }
+.mscreen[data-screen="property"] .msection:first-of-type { margin-top: 25px; }
+
+/* ---------- Documents ---------- */
+
+.mhead-docs { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding-top: 0; }
+.mselect { font-size: 14.5px; font-weight: 600; color: var(--m-accent); padding-top: 6px; }
+
+.meofy {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 19px;
+  background: linear-gradient(135deg, #1F9D63 0%, #167148 100%);
+  box-shadow: 0 5px 26px rgba(31, 157, 99, 0.28);
+  color: #fff;
+}
+.meofy-t { flex: 1 1 auto; min-width: 0; }
+.meofy-t b { display: block; font-size: 15.5px; font-weight: 700; letter-spacing: -0.2px; }
+.meofy-t i { display: block; font-style: normal; font-size: 12.5px; line-height: 1.3; color: rgba(255, 255, 255, 0.85); margin-top: 3px; }
+.meofy-b {
+  flex: 0 0 auto;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--m-accent);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 16px;
+  border-radius: 99px;
+}
+
+.mseg {
+  display: flex;
+  gap: 2.5px;
+  margin-top: 14px;
+  padding: 2.5px;
+  border-radius: 11px;
+  background: rgba(120, 120, 128, 0.12);
+}
+.mseg button {
+  flex: 1 1 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--m-2);
+  padding: 7px 0;
+  border-radius: 9px;
+}
+.mseg button.on {
+  background: var(--m-card);
+  color: var(--m-ink);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+}
+
+.msearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: rgba(120, 120, 128, 0.1);
+  color: var(--m-2);
+  font-size: 15px;
+}
+.msearch .mi { font-size: 14px; }
+
+.mdoclist { margin-top: 14px; }
+
+.mversion { margin: 22px 0 0; text-align: center; font-size: 12px; color: var(--m-3); }
+
+/* ---------- Status bar ----------
+   Content genuinely does scroll under the status bar on iOS — there is
+   no navigation bar on any of these screens, and the app sets no status
+   bar style of its own. Left completely bare, though, a scrolled row
+   collides with the clock and the Dynamic Island, and a hero phone
+   frozen mid-collision reads as a broken web widget rather than as an
+   app. This is iOS 26's own scroll edge effect in its mildest form: a
+   short fade of the app's background across the status bar's height,
+   enough to keep both legible and not enough to be noticed.
+
+   Deliberately not applied on the Property screen, whose hero photo
+   really does run edge to edge behind the clock — that's the app's own
+   marketing capture, and covering it would be the wrong kind of tidy. */
+
+.mock:not([data-on="property"]):not(.cover-open) .mstatus::before {
+  content: "";
+  position: absolute;
+  inset: -6px 0 auto 0;
+  height: 66px;
+  background: linear-gradient(to bottom, var(--m-bg) 34%, rgba(242, 242, 247, 0) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  z-index: -1;
+}
+
+.mstatus {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 54px;
+  pointer-events: none;
+  color: var(--m-ink);
+  /* Stacking order inside the phone, bottom to top: switcher pill 3,
+     tab bar 4, full-screen cover 5, sheet scrim 6, sheet 7, and the
+     status bar above all of them — iOS draws the clock over every
+     presentation, so it never disappears behind one. */
+  isolation: isolate;
+  z-index: 9;
+}
+.mtime {
+  position: absolute;
+  left: 0;
+  top: 15px;
+  width: 138px;
+  text-align: center;
+  padding-left: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  font-variant-numeric: tabular-nums;
+}
+.misland {
+  position: absolute;
+  left: 138px;
+  top: 13px;
+  width: 126px;
+  height: 37px;
+  border-radius: 19px;
+  background: #000;
+}
+.micons { position: absolute; right: 26px; top: 17px; display: flex; align-items: center; gap: 6px; }
+.micons svg { fill: currentColor; stroke: currentColor; display: block; }
+.msig { width: 17px; height: 11.5px; stroke: none; }
+.mwifi { width: 17px; height: 12px; }
+.mbatt { width: 25px; height: 12px; }
+
+/* ---------- Switcher pill ---------- */
+
+.mpill {
+  position: absolute;
+  top: 63px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(242, 242, 247, 0.62);
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+  backdrop-filter: blur(30px) saturate(1.8);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  font: inherit;
+  color: var(--m-ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s var(--ease-soft), transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 3;
+}
+.mock.has-pill .mpill { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+.mpill-dot { width: 6.5px; height: 6.5px; border-radius: 50%; background: var(--m-accent); }
+.mpill-n { font-size: 14px; font-weight: 600; letter-spacing: -0.1px; }
+.mpill-c { font-size: 10px; color: var(--m-2); stroke-width: 2.6; }
+
+/* ---------- Floating tab bar ----------
+   FloatingTabBar: 73pt items, 8pt vertical padding, 7pt container
+   padding, 30pt radius, sitting 6pt above the 34pt home indicator. */
+
+.mtabbar {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  padding: 7px;
+  border-radius: 30px;
+  /* .ultraThinMaterial, fitted to the marketing capture rather than
+     guessed: the bar lightens the background beneath it by about 9 of
+     255 — rgb(218,223,226) renders as rgb(227,233,233).
+
+     The tint is a light grey, NOT white, and that distinction is the
+     whole behaviour of an iOS material: it lifts a dark backdrop and
+     very slightly greys a white one. A white overlay only does the
+     first half, which left the bar completely invisible wherever it
+     floated over a white card — on Documents it vanished into the
+     list behind it. rgba(242,242,247,0.58) reproduces both: it lands
+     within a point or two of the captured values over the page
+     background, and still separates from pure white.
+     Border and shadow are the app's own: .white.opacity(0.15), and
+     .shadow(.black.opacity(0.16), radius: 18, y: 8). */
+  background: rgba(242, 242, 247, 0.58);
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+  backdrop-filter: blur(30px) saturate(1.8);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  z-index: 4;
+}
+.mtab {
+  width: 73px;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 22px;
+  background: none;
+  font: inherit;
+  color: var(--m-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: background-color 0.28s var(--ease-soft), color 0.2s var(--ease-soft);
+}
+/* 19.5pt, the height of the tallest measured glyph, so the VStack's own
+   arithmetic comes out at the app's 50.4pt item:
+   8 padding + 19.5 icon + 3 spacing + 11.9 label + 8 padding.
+   The glyphs are drawn at true SF Symbol proportions on a 24-unit grid
+   (see TAB_ART), so the SVG box is 24px and overflows this row by a
+   couple of points top and bottom — which is correct, since each glyph
+   is centred within its own box and they are not all the same height. */
+.mtab-ic { height: 19.5px; display: grid; place-items: center; overflow: visible; }
+.mtab-ic .mi { width: 24px; height: 24px; stroke-width: 1.7; }
+.mtab-ic .on { display: none; }
+.mtab-l { font-size: 10px; line-height: 11.9px; font-weight: 600; letter-spacing: -0.1px; }
+.mtab[aria-selected="true"] { background: rgba(31, 157, 99, 0.12); color: var(--m-accent); }
+.mtab[aria-selected="true"] .on { display: block; }
+.mtab[aria-selected="true"] .off { display: none; }
+
+/* ---------- Next Property (full-screen cover) ----------
+   Presented from the Portfolio card, covering the tab bar and the
+   switcher pill rather than sitting alongside them — `.fullScreenCover`,
+   not a fifth tab. It keeps the status bar (the OS draws that over
+   everything) and adds its own inline navigation bar with a Close
+   button, which is the only way back out. */
+
+.mcover {
+  position: absolute;
+  inset: 0;
+  background: var(--m-bg);
+  transform: translateY(100%);
+  visibility: hidden;
+  transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.42s;
+  z-index: 5;   /* see the stacking order note on .mstatus */
+}
+.mock.cover-open .mcover {
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: 0s, 0s;
+}
+/* AuraBackground(intensity: 0.6) — the same three fields as every other
+   screen, turned down, which is what this screen asks for by name. */
+.maura-soft {
+  background:
+    radial-gradient(circle 260px at 6% 2%, rgba(31, 157, 99, 0.096), transparent 70%),
+    radial-gradient(circle 215px at 98% 40%, rgba(204, 140, 84, 0.078), transparent 70%),
+    radial-gradient(circle 195px at 10% 94%, rgba(31, 157, 99, 0.054), transparent 70%);
+}
+/* Its own scroller rather than a reused `.mscreen` — see the note in
+   js/app-mock.js. It is never a tab panel and must never be treated as
+   one, so it shares none of that class's show/hide machinery. */
+.mcover-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.mcover-scroll::-webkit-scrollbar { display: none; }
+
+/* An inline nav bar: transparent at rest, taking its material only once
+   content has scrolled under it — which is what iOS does, and why this
+   screen needs no scroll-edge fade of its own. */
+/* The bar spans the status area and the 44pt nav bar together (0-103pt),
+   with the Close button bottom-aligned into the nav half — which is how
+   iOS lays a navigation bar out under the safe area inset.
+
+   The material is on the element itself rather than a z-index:-1
+   pseudo-element. As a negative-index child inside .mnav's own stacking
+   context, `backdrop-filter` had nothing meaningful to sample and the
+   bar stayed see-through however solid the computed opacity said it
+   was. `backdrop-filter` also stays on permanently and only the fill
+   fades: it cannot transition from `none`, and with nothing but the
+   aura gradient behind it at rest, blurring costs nothing visually. */
+.mnav {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 103px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  /* The button carries the rest of the 16pt inset itself — see below. */
+  padding: 0 4px 0 0;
+  z-index: 2;
+  background: rgba(242, 242, 247, 0);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  box-shadow: 0 0.5px 0 rgba(60, 60, 67, 0);
+  transition: background-color 0.22s var(--ease-soft), box-shadow 0.22s var(--ease-soft);
+}
+.mock.nav-solid .mnav {
+  background: rgba(242, 242, 247, 0.82);
+  box-shadow: 0 0.5px 0 var(--m-line);
+}
+/* A full 44pt-tall target filling the nav bar, not a 21pt one sized to
+   the word. This is the only way out of the cover, and at the width the
+   phone renders on a handset a label-sized target was about 33x21 real
+   pixels — small enough to miss, in the one place where missing means
+   being stuck on the screen. The 44pt band also centres the label the
+   way iOS does, instead of hanging it off the bar's bottom edge. */
+.mnav-close {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 17px;
+  color: var(--m-accent);
+}
+
+/* 59pt safe area + the 44pt nav bar + NextPropertyView's own 8pt. */
+.mnp-pad { padding: 111px 20px 130px; }
+.mnp-head h2 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.1; }
+.mnp-head p { margin: 3px 0 0; font-size: 14px; font-weight: 500; color: var(--m-2); }
+.mnp-pad .msection:first-of-type { margin-top: 20px; }
+/* The equity section's stat rows sit in a `VStack(spacing: 12)` that
+   starts immediately under the section header, so the first row takes
+   no top margin of its own and the rest are 12 apart. */
+.mnp-pad .mstats { margin-top: 0; }
+.mnp-pad .mstats-2 { margin-top: 12px; }
+.mnp-gap { margin-top: 12px; }
+
+/* The free reference list: a checkmark and a line of text per task, on
+   a 9pt rhythm with the divider inset past the glyph. */
+.mchecklist { padding: 3px 14px; }
+.mcheck { display: flex; align-items: flex-start; gap: 12px; padding: 9px 0; }
+.mcheck .mi { flex: 0 0 auto; font-size: 17px; color: var(--m-accent); margin-top: 1px; }
+.mcheck span { font-size: 14.5px; line-height: 1.28; }
+.mdiv-check { margin-left: 29px; }
+
+.mempty { padding: 22px 16px; text-align: center; }
+.mempty b { display: block; font-size: 14.5px; font-weight: 500; }
+.mempty i { display: block; font-style: normal; font-size: 12.5px; line-height: 1.35; color: var(--m-2); margin-top: 3px; }
+
+.mfoot-wide { margin-top: 10px; }
+
+/* ---------- Switcher sheet ---------- */
+
+.mscrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease-soft);
+  z-index: 6;
+}
+.msheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 52%;
+  padding: 0 20px;
+  border-radius: 15px 15px 0 0;
+  background: var(--m-bg);
+  transform: translateY(100%);
+  transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 7;
+  overflow: hidden;
+}
+.mock.sheet-open .mscrim { opacity: 1; pointer-events: auto; }
+.mock.sheet-open .msheet { transform: translateY(0); }
+.msheet-grab { display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--m-3); margin: 6px auto 0; }
+.msheet h4 { margin: 16px 0 12px; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.msheet-list { display: flex; flex-direction: column; gap: 10px; }
+.msheet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px 10px 10px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--m-card);
+  box-shadow: 0 3px 20px rgba(0, 0, 0, 0.05);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.msheet-ph { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 11px; overflow: hidden; }
+.msheet-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.msheet-t { flex: 1 1 auto; min-width: 0; }
+.msheet-t b { display: block; font-size: 15.5px; font-weight: 600; }
+.msheet-t i { display: block; font-style: normal; font-size: 12.5px; color: var(--m-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msheet-v { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.msheet-tick { width: 20px; height: 20px; border-radius: 50%; border: 1.6px solid var(--m-3); flex: 0 0 auto; position: relative; }
+.msheet-row.picked .msheet-tick { background: var(--m-accent); border-color: var(--m-accent); }
+.msheet-row.picked .msheet-tick::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 3.5px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(43deg);
+}
+.msheet-add {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 0;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(31, 157, 99, 0.12);
+  color: var(--m-accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ---------- Interaction feedback ----------
+   PressableButtonStyle is a gentle press-down scale; matched here so
+   a tap reads the same way it does on the phone. Hover is a desktop
+   affordance the app has no equivalent for — kept to the faintest
+   lift that still says "this is a control". */
+
+.mock button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mtile:active,
+.mnext:active,
+.msheet-row:active { transform: scale(0.975); }
+.mtile:active { box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07); }
+.mrow, .mseg button, .mbig, .msheet-add { transition: background-color 0.15s var(--ease-soft); }
+
+@media (hover: hover) {
+  .mtile:hover { box-shadow: 0 8px 34px rgba(0, 0, 0, 0.11); }
+  .mtab:not([aria-selected="true"]):hover { background: rgba(120, 120, 128, 0.1); }
+  .msheet-row:hover, .mseg button:not(.on):hover { background: #FAFAFC; }
+}
+
+/* Focus rings are sized in mock points and therefore shrink with the
+   phone, so they're scaled back up here — a 2px ring at 0.72 scale is
+   1.4 real pixels, which is not a visible focus indicator. */
+.mock :focus-visible {
+  outline: calc(3px / var(--mock-s)) solid #0A84FF;
+  outline-offset: calc(2px / var(--mock-s));
+  border-radius: 8px;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .mscreen, .mpill, .msheet, .mscrim, .mtab, .mtile, .mcover, .mnav { transition-duration: 0.01ms !important; }
+  .mscreen.on { animation: none !important; }
+  .mock[data-dir] .mscreen:not(.on) { --mx: 0px; }
+  .mtile:active, .mnext:active, .msheet-row:active { transform: none; }
+}
+
+/* While the pointer is inside the phone, js/app-mock.js freezes the
+   hero's parallax so the control you're reaching for stays put. The
+   drift is written as an inline style by js/estiqo.js, which is why
+   this needs the override. */
+.hero.mock-engaged .device {
+  transform: none !important;
+  transition: transform 0.5s var(--ease-soft) !important;
+}
+
+/* ---------- "This one is interactive" ----------
+   A phone that responds to a tap is worth nothing if nobody tries
+   tapping it. One quiet line under the device, in the page's own
+   voice — not a badge, not a pulsing arrow.
+
+   .device-wrap is a flex ROW (it centres a single phone); the hint
+   is its second child, so only the wrap that has one becomes a
+   column. The hub section's phone is left exactly as it was. */
+.device-wrap:has(.mock) { flex-direction: column; align-items: center; }
+
+/* Keyed on `.mock` existing, not on the hint's own markup: with
+   JavaScript off (or after the script's fallback fires) the phone is a
+   flat screenshot again, and a line inviting the visitor to tap it
+   would be an instruction to do something that does nothing. */
+.mock-hint { display: none; }
+.device-wrap:has(.mock) .mock-hint { display: flex; }
+
+.mock-hint {
+  margin: 18px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  text-align: center;
+  align-items: center;
+  gap: 8px;
+  /* `display` is deliberately not set here — the pair of rules above own
+     it, and repeating it in this block would re-show the hint on the
+     no-JavaScript path by simply coming later in the file. */
+}
+.mock-hint::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex: 0 0 auto;
+  animation: mock-hint-pulse 3.2s var(--ease-soft) infinite;
+}
+@keyframes mock-hint-pulse {
+  0%, 62%, 100% { opacity: 0.45; transform: scale(1); }
+  72% { opacity: 1; transform: scale(1.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mock-hint::before { animation: none; opacity: 0.7; }
+}
+
+/* Sub-paths marked "@fill" in the icon table — see icon() in
+   js/app-mock.js — carry the solid half of a half-filled symbol. */
+.mi .solid { fill: currentColor; fill-rule: evenodd; stroke: none; }
